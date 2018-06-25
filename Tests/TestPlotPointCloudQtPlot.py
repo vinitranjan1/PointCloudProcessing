@@ -20,7 +20,7 @@ from VtkPointCloud import VtkPointCloud
 # input1 = "../MantecaRoom1/room1sliceANNRadialANNGuided.las"
 # input1 = "../MantecaDock/dock.las"
 input1 = "../WatsonvilleEngineRoom/compressor.las"
-input1 = "../MantecaDock/fourPallets.las"
+input1 = "../MantecaRoom1/room1.las"
 input2 = "../WatsonvilleEngineRoom/compressorANNGuidedN40epsp07.las"
 # # input_two = "../MantecaDock/smallAreaGuidedk40.las"
 # input2 = "../MantecaDock/palletsGuidedFiltered_k40_eps_tenth.las"

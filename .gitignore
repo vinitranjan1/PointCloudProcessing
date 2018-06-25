@@ -1,2 +1,12 @@
 *.zip
 *.ply
+.DS_Store
+.idea/
+
+# data files
+
+MantecaRoom1/
+MantecaDock/
+WatsonvilleEngineRoom/
+AllentownRoom2_Cleaned.txt
+

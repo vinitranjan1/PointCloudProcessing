@@ -4,6 +4,7 @@ from PointCloudPlotQt import create_point_cloud_plot_qt
 from SubsampleFromLASData import subsample_from_las_data
 from Filters.RadiusOutlierFilter import radius_outlier_filter
 from Filters.ANNGuidedFilter import ann_guided_filter
+from Filters.ANNGuidedFilterMultiEps import ann_guided_filter_multi_eps
 from Filters.ANNRadialMultiStdev import ann_radial_filter_multi_stdev
 from Filters.GuidedFilterkNN import guided_filter_kNN
 from Filters.ANNRadialFilter import ann_radial_filter
@@ -19,6 +20,7 @@ from VtkPointCloud import VtkPointCloud
 # input1 = "../MantecaRoom1/room1sliceANNRadialANNGuided.las"
 # input1 = "../MantecaDock/dock.las"
 input1 = "../WatsonvilleEngineRoom/compressor.las"
+input1 = "../MantecaDock/fourPallets.las"
 input2 = "../WatsonvilleEngineRoom/compressorANNGuidedN40epsp07.las"
 # # input_two = "../MantecaDock/smallAreaGuidedk40.las"
 # input2 = "../MantecaDock/palletsGuidedFiltered_k40_eps_tenth.las"
@@ -66,12 +68,19 @@ with File(input1, mode='r') as f:
     # for point in tqdm(points4, total=len(points4), desc="Adding"):
     #     pc4.addPoint(point)
 
-    points_set = ann_radial_filter_multi_stdev(points, r=.07, sd_cutoffs=[1.2, 1.25, 1.3])
+    points_set = ann_guided_filter_multi_eps(points, neighbors=40, eps_list=[.05, .06, .07, .08, .09])
     for pset in points_set:
         new_pc = VtkPointCloud()
         for point in tqdm(pset, total=len(pset), desc="Adding"):
             new_pc.addPoint(point)
         to_plot.append(new_pc)
+
+    # points_set = ann_radial_filter_multi_stdev(points, r=.07, sd_cutoffs=[1.2, 1.25, 1.3])
+    # for pset in points_set:
+    #     new_pc = VtkPointCloud()
+    #     for point in tqdm(pset, total=len(pset), desc="Adding"):
+    #         new_pc.addPoint(point)
+    #     to_plot.append(new_pc)
 
     # points2 = ann_radial_filter(points, r=.07, sd_cutoff=1.3)
     # # points2 = guided_filter_kNN(points, k=40, filter_eps=.05)

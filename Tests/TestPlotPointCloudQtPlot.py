@@ -36,7 +36,7 @@ pc4 = VtkPointCloud()
 pc5 = VtkPointCloud()
 with File(input1, mode='r') as f:
     input_header = f.header
-    to_plot = [pc]
+    to_plot = [pc, pc4]
     # print("reading %s" % input_file)
 
     points = read_raw_las_data(input1)
@@ -64,16 +64,16 @@ with File(input1, mode='r') as f:
     # for point in tqdm(points3, total=len(points3), desc="Adding"):
     #     pc3.addPoint(point)
     #
-    # points4 = ann_guided_filter(points2, neighbors=40, filter_eps=.05)
-    # for point in tqdm(points4, total=len(points4), desc="Adding"):
-    #     pc4.addPoint(point)
+    points4 = ann_guided_filter(points, neighbors=40, filter_eps=.07)
+    for point in tqdm(points4, total=len(points4), desc="Adding"):
+        pc4.addPoint(point)
 
-    points_set = ann_guided_filter_multi_eps(points, neighbors=40, eps_list=[.05, .06, .07, .08, .09])
-    for pset in points_set:
-        new_pc = VtkPointCloud()
-        for point in tqdm(pset, total=len(pset), desc="Adding"):
-            new_pc.addPoint(point)
-        to_plot.append(new_pc)
+    # points_set = ann_guided_filter_multi_eps(points, neighbors=40, eps_list=[.05, .06, .07, .08, .09])
+    # for pset in points_set:
+    #     new_pc = VtkPointCloud()
+    #     for point in tqdm(pset, total=len(pset), desc="Adding"):
+    #         new_pc.addPoint(point)
+    #     to_plot.append(new_pc)
 
     # points_set = ann_radial_filter_multi_stdev(points, r=.07, sd_cutoffs=[1.2, 1.25, 1.3])
     # for pset in points_set:
@@ -112,7 +112,7 @@ with File(input1, mode='r') as f:
 
     # create_point_cloud_plot_qt(to_plot, input_header)
     # to_plot = [pc, pc2, pc3, pc4]
-    create_point_cloud_plot_qt(to_plot, axes_on=False)
+    create_point_cloud_plot_qt(to_plot, input_header=input_header, axes_on=False)
     pdb.set_trace()
     # close after creating, else save won't work
     # f.close()

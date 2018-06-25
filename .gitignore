@@ -3,6 +3,8 @@
 .DS_Store
 .idea/
 
+__pycache__/
+venv/
 # data files
 
 MantecaRoom1/

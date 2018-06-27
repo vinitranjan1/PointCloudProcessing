@@ -6,7 +6,7 @@ from tqdm import tqdm, trange
 from annoy import AnnoyIndex
 
 
-def ann_guided_filter_prebuilt_tree(input_cloud, neighbors=40, filter_eps=.05, tree_file=None, dim=3):
+def ann_guided_filter_prebuilt_tree(input_cloud, neighbors=40, filter_eps=.05, tree=None, dim=3):
     output_cloud = []
     # print("Constructing kdtree")
     # tree = kdtree.KDTree(input_cloud)
@@ -15,9 +15,7 @@ def ann_guided_filter_prebuilt_tree(input_cloud, neighbors=40, filter_eps=.05, t
     # print("finding neighbors")
 
     num = len(input_cloud)
-    tree = AnnoyIndex(dim)
-    tree.load(tree_file)
-    print("Tree loaded from disk")
+
     neighbor_list = []
     # start = time.time()
     # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)

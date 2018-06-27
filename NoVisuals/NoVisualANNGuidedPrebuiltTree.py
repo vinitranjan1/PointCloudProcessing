@@ -3,13 +3,14 @@ sys.path.append('../')
 from Filters.ANNGuidedFilterPrebuiltTree import ann_guided_filter_prebuilt_tree
 from tqdm import tqdm, trange
 import numpy as np
+from annoy import AnnoyIndex
 from ReadRawLAS import read_raw_las_data
 from laspy.file import File
 import pdb
 
 input1 = "../MantecaRoom1/room1.las"
 output1 = "../Output/temp.las"
-tree = "../MantecaRoom1/room1tree.tree"
+tree_file = "../MantecaRoom1/room1ANNtree.tree"
 
 pc = np.array([], dtype=np.float32)
 pc2 = np.array([], dtype=np.float32)
@@ -17,7 +18,9 @@ with File(input1, mode='r') as f:
     input_header = f.header
 
     raw_points = read_raw_las_data(input1)
-    points = ann_guided_filter_prebuilt_tree(raw_points, neighbors=50, filter_eps=.07, tree_file=tree)
+    tree = AnnoyIndex(3)
+    tree.load(tree_file)
+    points = ann_guided_filter_prebuilt_tree(raw_points, neighbors=50, filter_eps=.07, tree=tree)
 
     #
     #

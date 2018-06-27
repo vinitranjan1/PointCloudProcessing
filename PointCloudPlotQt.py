@@ -233,7 +233,7 @@ class PointCloudPlotQt(QWidget):
         elif len(to_collapse[0]) == 1:
             self.__collapse_one_dim(to_collapse[0])
         else:
-            pass
+            self.__collapse_two_dim(to_collapse[0])
 
     def __collapse_one_dim(self, to_collapse):
         mesh = QInputDialog.getText(self, "Meshing Distance", "In meters")
@@ -265,12 +265,49 @@ class PointCloudPlotQt(QWidget):
         plt.xlabel(dim_to_label[dims[0]])
         plt.ylabel(dim_to_label[dims[1]])
         # print(min(arr1), max(arr1), min(arr2), max(arr2))
-        print(float(mesh[0]))
+        # print(float(mesh[0]))
         xbins = int((max(arr1) - min(arr1)) / float(mesh[0]))
         ybins = int((max(arr2) - min(arr2)) / float(mesh[0]))
         start = time.time()
         print("Finding histogram")
         plt.hist2d(arr1, arr2, (xbins, ybins), cmap=plt.cm.jet, norm=colors.LogNorm())
+        end = time.time() - start
+        print("Finding histogram took %d seconds" % end)
+        # plt.imshow(heatmap, extent=extent, origin='lower')
+        plt.show()
+
+    def __collapse_two_dim(self, to_collapse):
+        mesh = QInputDialog.getText(self, "Meshing Distance", "In meters")
+        w = self.app.focusWidget()
+        label_to_dim = {"X": 0, "Y": 1, "Z": 2}
+        dim_to_label = {0: "X", 1: "Y", 2: "Z"}
+        try:
+            dim_1 = label_to_dim[to_collapse[0]]
+            dim_2 = label_to_dim[to_collapse[1]]
+        except KeyError:
+            QMessageBox.about(self, "Error", "Invalid input, must be of form such as'XY'")
+            return
+        dims = [0, 1, 2]
+        dims.remove(dim_1)
+        dims.remove(dim_2)
+        arr = [] #TODO finish this
+        i = self.widgets.index(w)
+        points = self.plots[i].getPoints()
+        for k in tqdm(range(points.GetNumberOfPoints()), total=points.GetNumberOfPoints(), desc="Getting Points"):
+            p = points.GetPoint(k)
+            arr.append(p[dims[0]])
+
+        pdb.set_trace()
+        print("Plotting")
+        plt.clf()
+        # plt.axis('equal')
+        plt.title("Collapse %s, Mesh %s" % (to_collapse, mesh[0]))
+        plt.xlabel(dim_to_label[dims[0]])
+        plt.ylabel("# Points")
+        bins = int((max(arr) - min(arr)) / float(mesh[0]))
+        start = time.time()
+        print("Finding histogram")
+        plt.hist(arr, bins=bins)
         end = time.time() - start
         print("Finding histogram took %d seconds" % end)
         # plt.imshow(heatmap, extent=extent, origin='lower')

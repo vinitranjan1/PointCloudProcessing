@@ -1,13 +1,14 @@
+import sys
+sys.path.append('../')
 from Filters.ANNGuidedFilter import ann_guided_filter
 from tqdm import tqdm, trange
 import numpy as np
 from ReadRawLAS import read_raw_las_data
 from laspy.file import File
-from PointCloudPlotQt import create_point_cloud_plot_qt
 import pdb
 
 input1 = "../MantecaDock/fourPallets.las"
-output1 = "Output/temp.las"
+output1 = "../Output/temp.las"
 
 pc = np.array([], dtype=np.float32)
 pc2 = np.array([], dtype=np.float32)

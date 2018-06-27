@@ -4,7 +4,7 @@ from laspy.file import File
 from tqdm import tqdm, trange
 
 
-def subsample_from_las_data(filename, sample_frac = .1):
+def subsample_from_las_data(filename, sample_frac=.1):
     points = []
 
     with File(filename, mode='r') as in_file:

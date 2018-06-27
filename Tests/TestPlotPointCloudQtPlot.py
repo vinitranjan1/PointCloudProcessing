@@ -1,5 +1,7 @@
+import sys
 from laspy.file import File
 from tqdm import tqdm, trange
+from CreateVTKPCFromArray import create_vtkpc_from_array
 from PointCloudPlotQt import create_point_cloud_plot_qt
 from SubsampleFromLASData import subsample_from_las_data
 from Filters.RadiusOutlierFilter import radius_outlier_filter
@@ -13,15 +15,21 @@ from AxisAlignedBox3D import AxisAlignedBox3D
 import pdb
 from ReadRawLAS import read_raw_las_data
 from VtkPointCloud import VtkPointCloud
+sys.path.append('../')
 
 # input_file = "../MantecaDock/dock.las"
 # x = [1, 2, 3, 4, 6]
 # print(binary_search(x, 0, len(x)-1, 5))
-# input1 = "../MantecaRoom1/room1sliceANNRadialANNGuided.las"
+input1 = "../MantecaRoom1/room1slice.las"
+input2 = "../MantecaRoom1/room1sliceANNRadialANNGuided.las"
 # input1 = "../MantecaDock/dock.las"
-input1 = "../WatsonvilleEngineRoom/compressor.las"
-input1 = "../MantecaRoom1/room1.las"
-input2 = "../WatsonvilleEngineRoom/compressorANNGuidedN40epsp07.las"
+# input1 = "../WatsonvilleEngineRoom/compressor.las"
+# input1 = "../WatsonvilleEngineRoom/engineroom.las"
+# input1 = "../WatsonvilleEngineRoom/compressor.las"
+# input1 = "../MantecaDock/fourPallets.las"
+# input2 = "../WatsonvilleEngineRoom/compressorANNGuidedN40epsp07.las"
+# input2 = "../NoVisuals/Output/temp.las"
+# input2 = "/Users/Vinit/Documents/Lineage/AWS/Output/temp.las"
 # # input_two = "../MantecaDock/smallAreaGuidedk40.las"
 # input2 = "../MantecaDock/palletsGuidedFiltered_k40_eps_tenth.las"
 # input3 = "../MantecaDock/palletsGuided_Radial.las"  #radial uses sd_cutoff = 1.5
@@ -29,23 +37,15 @@ input2 = "../WatsonvilleEngineRoom/compressorANNGuidedN40epsp07.las"
 # input5 = "../MantecaDock/palletsRadial_Guided.las"
 # input2 = "../MantecaRoom1/room1sliceANNGuided.las"  # sd_cutoff =
 desired_num_points = 100000
-pc = VtkPointCloud()
-pc2 = VtkPointCloud()
-pc3 = VtkPointCloud()
-pc4 = VtkPointCloud()
-pc5 = VtkPointCloud()
 with File(input1, mode='r') as f:
     input_header = f.header
-    to_plot = [pc, pc4]
     # print("reading %s" % input_file)
 
     points = read_raw_las_data(input1)
-    for point in tqdm(points, total=len(points), desc="Adding"):
-        pc.addPoint(point)
+    pc = create_vtkpc_from_array(points)
 
-    # points2 = read_raw_las_data(input2)
-    # for point in tqdm(points2, total=len(points2), desc="Adding"):
-    #     pc2.addPoint(point)
+    points2 = read_raw_las_data(input2)
+    pc2 = create_vtkpc_from_array(points2)
 
     # points3 = ann_radial_filter(points, r=.07, sd_cutoff=.5) # TODO this gives mean=307 and std=232
     # points3 = read_raw_las_data(input3)
@@ -64,9 +64,9 @@ with File(input1, mode='r') as f:
     # for point in tqdm(points3, total=len(points3), desc="Adding"):
     #     pc3.addPoint(point)
     #
-    points4 = ann_guided_filter(points, neighbors=40, filter_eps=.07)
-    for point in tqdm(points4, total=len(points4), desc="Adding"):
-        pc4.addPoint(point)
+    # points4 = ann_guided_filter(points, neighbors=40, filter_eps=.07)
+    # for point in tqdm(points4, total=len(points4), desc="Adding"):
+    #     pc4.addPoint(point)
 
     # points_set = ann_guided_filter_multi_eps(points, neighbors=40, eps_list=[.05, .06, .07, .08, .09])
     # for pset in points_set:
@@ -112,6 +112,8 @@ with File(input1, mode='r') as f:
 
     # create_point_cloud_plot_qt(to_plot, input_header)
     # to_plot = [pc, pc2, pc3, pc4]
+
+    to_plot = [pc, pc2]
     create_point_cloud_plot_qt(to_plot, input_header=input_header, axes_on=False)
     pdb.set_trace()
     # close after creating, else save won't work

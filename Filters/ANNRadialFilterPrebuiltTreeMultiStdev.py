@@ -34,7 +34,7 @@ def get_neighbor_length(k, num_neighbors, tree, r):
             return len(ann[:cutoff])
 
 
-def ann_radial_filter_multi_stdev(input_cloud, r=.1, sd_cutoffs=[1, 1.5], metric='euclidean'):
+def ann_radial_filter_prebuilt_tree_multi_stdev(input_cloud, r=.1, sd_cutoffs=[1, 1.5], metric='euclidean', tree_file=None):
     output_cloud = []
     # print("Constructing kdtree")
     # tree = kdtree.KDTree(input_cloud)
@@ -42,16 +42,8 @@ def ann_radial_filter_multi_stdev(input_cloud, r=.1, sd_cutoffs=[1, 1.5], metric
     # print("kdtree constructed")
     # print("finding neighbors")
 
-    num = len(input_cloud)
-    tree = AnnoyIndex(3, metric=metric)
-    for k in trange(num, desc="Preparing for ANN"):
-        tree.add_item(k, input_cloud[k])
-
-    start = time.time()
-    num_trees = 4
-    tree.build(num_trees)
-    end = time.time() - start
-    print("Building %d trees took %d seconds" % (num_trees, end))
+    tree = AnnoyIndex(3, metric='euclidean')
+    tree.load(tree_file)
 
     lengths = []
     num_neighbors = 2000
@@ -59,7 +51,7 @@ def ann_radial_filter_multi_stdev(input_cloud, r=.1, sd_cutoffs=[1, 1.5], metric
     # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
     # end = time.time() - start
     # print("Finding neighbors took %s seconds" % end)
-    for k in trange(num, desc="Doing ANN"):
+    for k in trange(len(input_cloud), desc="Doing ANN"):
         lengths.append(get_neighbor_length(k, num_neighbors, tree, r=r))
 
     print("neighbors found")

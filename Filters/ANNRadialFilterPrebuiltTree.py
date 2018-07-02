@@ -34,7 +34,7 @@ def get_neighbor_length(k, num_neighbors, search_k_num, tree, r):
             return len(ann[:cutoff])
 
 
-def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, tree_file=None, metric='euclidean'):
+def ann_radial_filter_prebuilt_tree(input_cloud, r=.1, sd_cutoff=1, tree_file=None, metric='euclidean'):
     output_cloud = []
     # print("Constructing kdtree")
     # tree = kdtree.KDTree(input_cloud)

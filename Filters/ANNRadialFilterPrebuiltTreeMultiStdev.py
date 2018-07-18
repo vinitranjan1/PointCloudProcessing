@@ -46,7 +46,7 @@ def ann_radial_filter_prebuilt_tree_multi_stdev(input_cloud, r=.1, sd_cutoffs=[1
     tree.load(tree_file)
 
     lengths = []
-    num_neighbors = 2000
+    num_neighbors = 500
     # start = time.time()
     # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
     # end = time.time() - start

@@ -11,6 +11,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.ren = ren
         self.camera = ren.GetActiveCamera()
         self.app = app
+        self.lastLeftButtonClick = None
         self.leftButtonPushed = False
         self.rightButtonPushed = False
         self.middleButtonPushed = False
@@ -28,6 +29,7 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
         # print("Left Button released")
         self.edit_display_angle(obj, event)
         self.leftButtonPushed = False
+        self.lastLeftButtonClick = event
         self.OnLeftButtonUp()  # make sure that this goes AFTER the previous function call
         return
 

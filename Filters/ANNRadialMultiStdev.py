@@ -4,6 +4,7 @@ from scipy.spatial import kdtree
 import time
 from tqdm import tqdm, trange
 from annoy import AnnoyIndex
+import h5py
 
 
 def binary_search(tree, arr, left, right, curr, r):
@@ -34,35 +35,39 @@ def get_neighbor_length(k, num_neighbors, tree, r):
             return len(ann[:cutoff])
 
 
-def ann_radial_filter_multi_stdev(input_cloud, r=.1, sd_cutoffs=[1, 1.5], metric='euclidean'):
+def ann_radial_filter_multi_stdev(input_cloud, r=.1, sd_cutoffs=[1, 1.5], metric='euclidean', h5dir=None, h5f=None):
     output_cloud = []
     # print("Constructing kdtree")
     # tree = kdtree.KDTree(input_cloud)
     # other_tree = kdtree.KDTree(input_cloud)
     # print("kdtree constructed")
     # print("finding neighbors")
+    if h5f is None:
+        num = len(input_cloud)
+        tree = AnnoyIndex(3, metric=metric)
+        for k in trange(num, desc="Preparing for ANN"):
+            tree.add_item(k, input_cloud[k])
 
-    num = len(input_cloud)
-    tree = AnnoyIndex(3, metric=metric)
-    for k in trange(num, desc="Preparing for ANN"):
-        tree.add_item(k, input_cloud[k])
+        start = time.time()
+        num_trees = 4
+        tree.build(num_trees)
+        end = time.time() - start
+        print("Building %d trees took %d seconds" % (num_trees, end))
 
-    start = time.time()
-    num_trees = 4
-    tree.build(num_trees)
-    end = time.time() - start
-    print("Building %d trees took %d seconds" % (num_trees, end))
+        lengths = []
+        num_neighbors = 2000
+        # start = time.time()
+        # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
+        # end = time.time() - start
+        # print("Finding neighbors took %s seconds" % end)
+        for k in trange(num, desc="Doing ANN"):
+            lengths.append(get_neighbor_length(k, num_neighbors, tree, r=r))
 
-    lengths = []
-    num_neighbors = 2000
-    # start = time.time()
-    # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
-    # end = time.time() - start
-    # print("Finding neighbors took %s seconds" % end)
-    for k in trange(num, desc="Doing ANN"):
-        lengths.append(get_neighbor_length(k, num_neighbors, tree, r=r))
-
-    print("neighbors found")
+        print("neighbors found")
+    else:
+        print("h5 file found at "+h5dir+h5f+'.h5')
+        with h5py.File(h5dir+h5f+'.h5', 'r') as hf:
+            lengths = hf[h5f][:]
 
     outs = []
     for sd in sd_cutoffs:

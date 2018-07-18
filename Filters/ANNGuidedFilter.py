@@ -6,7 +6,7 @@ from tqdm import tqdm, trange
 from annoy import AnnoyIndex
 
 
-def ann_guided_filter(input_cloud, neighbors=40, filter_eps=.05, dim=3):
+def ann_guided_filter(input_cloud, num_neighbors=40, filter_eps=.05, dim=3, config_file=None):
     output_cloud = []
     # print("Constructing kdtree")
     # tree = kdtree.KDTree(input_cloud)
@@ -20,7 +20,7 @@ def ann_guided_filter(input_cloud, neighbors=40, filter_eps=.05, dim=3):
         tree.add_item(k, input_cloud[k])
 
     start = time.time()
-    num_trees = 5
+    num_trees = 2
     tree.build(num_trees)
     end = time.time() - start
     print("Building %d trees took %d seconds" % (num_trees, end))
@@ -30,15 +30,15 @@ def ann_guided_filter(input_cloud, neighbors=40, filter_eps=.05, dim=3):
     # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
     # end = time.time() - start
     # print("Finding neighbors took %s seconds" % end)
-    for k in trange(num, desc="Doing ANN"):
-        neighbor_list.append(tree.get_nns_by_item(k, neighbors))
+    # for k in trange(num, desc="Doing ANN"):
+    #     neighbor_list.append(tree.get_nns_by_item(k, neighbors))
 
-    print("neighbors found")
+    # print("neighbors found")
 
-    for i in trange(len(input_cloud), desc="Filtering"):
+    for i in trange(len(input_cloud), desc="ANN + Filtering"):
         # remember that neighbor list gives a list of indices that need to be pulled from input_list
         # step 1, as referred to in the paper
-        neighbors = neighbor_list[i]
+        neighbors = tree.get_nns_by_item(i, num_neighbors)
         # step 2
         k = float(len(neighbors))
         # step 3
@@ -62,6 +62,7 @@ def ann_guided_filter(input_cloud, neighbors=40, filter_eps=.05, dim=3):
         b = p_bar - a*p_bar
         # step 6
         output_cloud.append(a*input_cloud[i]+b)
-
+    if config_file is not None:
+        return output_cloud, {"num_neighbors": num_neighbors, "filter_eps": filter_eps, "dim": dim}
     return output_cloud
 

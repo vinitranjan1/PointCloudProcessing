@@ -5,7 +5,7 @@ import pdb
 
 
 def save_points_as_las(points, file_name, input_header):
-    with File(file_name, mode='w', header=input_header) as file:
+    with File(file_name, mode='w', header=input_header) as f:
         # pdb.set_trace()
         # points = pc.getPoints()
         # print(points)
@@ -19,6 +19,6 @@ def save_points_as_las(points, file_name, input_header):
             allx.append(p[0])
             ally.append(p[1])
             allz.append(p[2])
-        file.x = np.array(allx)
-        file.y = np.array(ally)
-        file.z = np.array(allz)
+        f.x = np.array(allx)
+        f.y = np.array(ally)
+        f.z = np.array(allz)

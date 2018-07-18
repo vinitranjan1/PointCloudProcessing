@@ -1,4 +1,5 @@
 import vtk
+from tqdm import tqdm, trange
 from numpy import random
 import random
 
@@ -32,6 +33,13 @@ class VtkPointCloud:
 
     def getPoints(self):
         return self.vtkPoints
+
+    def getPointsAsArray(self):
+        output = []
+        points = self.vtkPoints
+        for k in trange(points.GetNumberOfPoints(), desc="Getting Points As Array"):
+            output.append(points.GetPoint(k) + tuple()) # makes a copy
+        return output
 
     def clearPoints(self):
         self.vtkPoints = vtk.vtkPoints()

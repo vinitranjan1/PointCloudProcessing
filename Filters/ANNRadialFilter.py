@@ -34,7 +34,7 @@ def get_neighbor_length(k, num_neighbors, search_k_num, tree, r):
             return len(ann[:cutoff])
 
 
-def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, metric='euclidean'):
+def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, metric='euclidean', config_file=None):
     output_cloud = []
     # print("Constructing kdtree")
     # tree = kdtree.KDTree(input_cloud)
@@ -48,7 +48,7 @@ def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, metric='euclidean'):
         tree.add_item(k, input_cloud[k])
 
     start = time.time()
-    num_trees = 4
+    num_trees = 2
     tree.build(num_trees)
     end = time.time() - start
     print("Building %d trees took %d seconds" % (num_trees, end))
@@ -59,7 +59,7 @@ def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, metric='euclidean'):
     # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
     # end = time.time() - start
     # print("Finding neighbors took %s seconds" % end)
-    for k in trange(num, desc="Doing ANN"):
+    for k in trange(num, desc="Doing ANN For Radial"):
         lengths.append(get_neighbor_length(k, num_neighbors, int(num_trees*num_neighbors/2), tree, r=r))
 
         # pdb.set_trace()
@@ -72,8 +72,12 @@ def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, metric='euclidean'):
     print("mean is %f" % mean)
     print("std is %f" % std)
     cutoff = mean - sd_cutoff * std
-    for i in trange(len(lengths), desc="Removing outliers"):
+    for i in trange(len(lengths), desc="Removing Radial outliers"):
         if lengths[i] >= cutoff:
             output_cloud.append(input_cloud[i])
+    preserved = "Radial filter preserved %.2f%% of points" % (100. * len(output_cloud) / len(input_cloud))
+    print(preserved)
+    if config_file is not None:
+        return output_cloud, {"r": r, "sd_cutoff": sd_cutoff, "metric": metric, "preserved": preserved}
     return output_cloud
 

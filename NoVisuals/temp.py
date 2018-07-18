@@ -1,0 +1,11 @@
+with File(dock, mode='r') as f:
+    print("Starting Room 3")
+    # points = subsample_frac_from_las_data(room2, sample_frac=.01)
+    points = read_raw_las_data(dock)
+    points, kwargs = ann_guided_filter(points, num_neighbors=50, filter_eps=.07, config_file=config_file)
+    write_to_config(config_file, dock, ann_guided_filter.__name__, kwargs, include_las_name=True)
+    points, kwargs = rounding_filter(points, config_file=config_file)
+    write_to_config(config_file, dock, rounding_filter.__name__, kwargs, include_las_name=False)
+    points, kwargs = ann_radial_filter(points, sd_cutoff=1.3, config_file=config_file)
+    write_to_config(config_file, dock, ann_radial_filter.__name__, kwargs, include_las_name=False)
+    print("Finished Room 6")

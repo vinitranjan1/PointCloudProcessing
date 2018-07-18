@@ -9,6 +9,13 @@ venv/
 # data files
 
 MantecaRoom1/
+MantecaRoom2/
+MantecaRoom3/
+MantecaRoom4/
+MantecaRoom5/
+BadMantecaRoom5/
+MantecaRoom6/
+MantecaCompressorRoom/
 MantecaDock/
 WatsonvilleEngineRoom/
 AllentownRoom2_Cleaned.txt

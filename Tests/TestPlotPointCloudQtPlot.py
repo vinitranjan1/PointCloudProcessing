@@ -17,50 +17,59 @@ from Filters.ThresholdFilter import threshold_filter
 from NaiveSlice import naive_slice
 from NaiveSliceFromLAS import naive_slice_from_las
 from AxisAlignedBox3D import AxisAlignedBox3D
+from SavePointsAsLAS import save_points_as_las
 import pdb
 from ReadRawLAS import read_raw_las_data
 from VtkPointCloud import VtkPointCloud
 import h5py
 sys.path.append('../')
 
-# input_file = "../MantecaDock/dock.las"
-# x = [1, 2, 3, 4, 6]
-# print(binary_search(x, 0, len(x)-1, 5))
-# input1 = "../MantecaRoom5/room5scan1/room5scan1.las"
-# input1 = "../MantecaDock/fourPallets.las"
-# input1 = "../MantecaRoom1/room1slice.las"
-# input1 = "../MantecaCompressorRoom/compressorRoom.las"
-# input1 = "../MantecaRoom1/room1ANNGuidedN40Epsp07.las"
-# input1 = "../MantecaRoom1/room1AGRounded.las"
-# input1 = "../MantecaRoom5/room5.las"
+# input1 = "../MantecaFiltered/room1FS.laz"
 # input1 = "../MantecaDock/dock.las"
-# input1 = "../MantecaRoom1/room1.las"
-# input1 = "../MantecaRoom1/room1AGRoundedARSDC1p3.las"
-# input1 = "../MantecaRoom2/room2.las"
-# input1 = "../MantecaRoom2/room2SAGN40epsp05.las"
-# input1 = "../MantecaRoom4/room4S.las"
-input1 = "../MantecaRoom3/room3.las"
-# input1 = "../MantecaRoom6/room6S.las"
-# input1 = "../MantecaRoom1/room1slice.las"
-# input1 = "../MantecaDock/dock.las"
-# input1 = "../MantecaRoom4/Ceckman.las"
+# input1 = "../MantecaFiltered/testmerge.laz"
+# input1 = "../MantecaFiltered/room1F.laz"
+# input1 = "../MantecaFiltered/room2FS.laz"
+# input1 = "../MantecaFiltered/room3F.laz"
+# input1 = "../MantecaFiltered/room3FS.laz"
+# input1 = "../MantecaFiltered/warehouse.las"
+# input2 = "../MantecaFiltered/warehouseSlice.las"
+# input1 = "../MantecaFiltered/raildockFS.laz"
+input1 = "../MantecaFiltered/Manteca.las"
+input2 = "../MantecaFiltered/MantecaSlice.las"
+# input1 = "../MantecaFiltered/engineRoomFS.laz"
+# input2 = "../MantecaCompressorRoom/compressorRoom.las"
+# input1 = "../MantecaFiltered/room4F.laz"
+# input1 = "../MantecaFiltered/room5F.las"
+# input1 = "../MantecaFiltered/room6F.las"
+# input1 = "../MantecaFiltered/dockF.las"
+# input1 = "../MantecaFiltered/halfmerge.laz"
+# input1 = "../MantecaFiltered/tempdock.las"
 
 desired_num_points = 100000
 with File(input1, mode='r') as f:
     input_header = f.header
     to_plot = []
     # print("reading %s" % input_file)
-
-    # samp = subsample_frac_from_las_data(input1, .05)
     # points = naive_slice(samp, AxisAlignedBox3D([-100, -50, 2], [400, 100, 3]))
     # points = naive_slice_from_las(input1, AxisAlignedBox3D([-100, -50, 2], [400, 100, 3]))
-    points = subsample_frac_from_las_data(input1, .05)
-    # points = read_raw_las_data("../MantecaRoom2/room2F.las")
-    # points = rounding_filter(points)
+    # points2 = subsample_frac_from_las_data(input2, .1)
+    # pc2 = create_vtkpc_from_array(points2)
+    # to_plot.append(pc2)
+
+    # points2 = read_raw_las_data(input2)
+    # pc2 = create_vtkpc_from_array(points2)
+    # to_plot.append(pc2)
+
+    # points = read_raw_las_data(input1)
+    points = subsample_frac_from_las_data(input1, .01)
     pc = create_vtkpc_from_array(points)
     to_plot.append(pc)
 
-    # points2 = threshold_filter(points, threshold=.01)
+    points2 = read_raw_las_data(input2)
+    pc2 = create_vtkpc_from_array(points2)
+    to_plot.append(pc2)
+
+    # points2 = threshold_filter(points, threshold=.015)
     # pc2 = create_vtkpc_from_array(points2)
     # to_plot.append(pc2)
 

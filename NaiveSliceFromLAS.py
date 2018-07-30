@@ -23,6 +23,7 @@ def naive_slice_from_las(filename, slice_box=AxisAlignedBox3D()):
                     and lower_corner[1] <= s1 <= upper_corner[1]\
                     and lower_corner[2] <= s2 <= upper_corner[2]:
                 points.append([s0, s1, s2])
+        print("sliced %d points" % len(points))
     return points
 
 

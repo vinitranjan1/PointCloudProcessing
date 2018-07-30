@@ -10,13 +10,25 @@ class VtkPointCloud:
         self.maxNumPoints = maxNumPoints
         self.vtkPolyData = vtk.vtkPolyData()
         self.clearPoints()
-        mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputData(self.vtkPolyData)
-        mapper.SetColorModeToDefault()
-        mapper.SetScalarRange(zMin, zMax)
-        mapper.SetScalarVisibility(1)
+        self.mapper = vtk.vtkPolyDataMapper()
+        self.mapper.SetInputData(self.vtkPolyData)
+        self.mapper.SetColorModeToDefault()
+        self.mapper.SetScalarRange(zMin, zMax)
+        self.mapper.SetScalarVisibility(1)
+
+        self.frustumMapper = vtk.vtkPolyDataMapper()
+
+        # For bounding box outline
         self.vtkActor = vtk.vtkActor()
-        self.vtkActor.SetMapper(mapper)
+        self.vtkActor.SetMapper(self.mapper)
+        self.outline = vtk.vtkOutlineFilter()
+        self.outline.SetInputData(self.vtkPolyData)
+        # self.outline.SetInputConnection(self.vtkPolyData.GetOutputPort())
+        self.mapOutline = vtk.vtkPolyDataMapper()
+        self.mapOutline.SetInputConnection(self.outline.GetOutputPort())
+        self.outlineActor = vtk.vtkActor()
+        self.outlineActor.SetMapper(self.mapOutline)
+        self.outlineActor.GetProperty().SetColor(0, 0, 0)
 
     def addPoint(self, point):
         # if self.vtkPoints.GetNumberOfPoints() < self.maxNumPoints:
@@ -38,7 +50,7 @@ class VtkPointCloud:
         output = []
         points = self.vtkPoints
         for k in trange(points.GetNumberOfPoints(), desc="Getting Points As Array"):
-            output.append(points.GetPoint(k) + tuple()) # makes a copy
+            output.append(points.GetPoint(k) + tuple())  # makes a copy
         return output
 
     def clearPoints(self):

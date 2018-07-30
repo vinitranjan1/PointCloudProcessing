@@ -16,7 +16,7 @@ with File(input1, mode='r') as f:
     input_header = f.header
 
     raw_points = read_raw_las_data(input1)
-    points = ann_guided_filter(raw_points, neighbors=50, filter_eps=.07)
+    points = ann_guided_filter(raw_points, num_neighbors=50, filter_eps=.07)
 
     #
     #

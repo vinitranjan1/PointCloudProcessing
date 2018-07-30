@@ -47,7 +47,7 @@ with File(room2, mode='r') as f:
 
 with File(room3, mode='r') as f:
     print("Starting Room 3")
-    # points = subsample_frac_from_las_data(room2, sample_frac=.01)
+    # points = subsample_frac_from_las_data("../MantecaRoom4/Ceckman.las", sample_frac=.01)
     points = read_raw_las_data(room3)
     points, kwargs = ann_guided_filter(points, num_neighbors=50, filter_eps=.07, config_file=config_file)
     write_to_config(config_file, room3, ann_guided_filter.__name__, kwargs, include_las_name=True)
@@ -59,7 +59,7 @@ with File(room3, mode='r') as f:
     save_points_as_las(points, room3out, f.header)
     print("Finished Room 3")
     del points
-
+exit(0)
 with File(room4, mode='r') as f:
     print("Starting Room 3")
     # points = subsample_frac_from_las_data(room2, sample_frac=.01)

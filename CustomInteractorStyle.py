@@ -6,11 +6,14 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
     def __init__(self, parent=None, ren=None, corner=None, app=None):
         self.AddObserver("LeftButtonPressEvent", self.left_button_press_event)
         self.AddObserver("LeftButtonReleaseEvent", self.left_button_release_event)
+        self.AddObserver("MiddleButtonPressEvent", self.middle_button_press_event)
+        self.AddObserver("MiddleButtonReleaseEvent", self.middle_button_release_event)
         self.AddObserver("MouseMoveEvent", self.mouse_button_move_event)
         self.corner = corner
         self.ren = ren
         self.camera = ren.GetActiveCamera()
         self.app = app
+        self.culling = False
         self.lastLeftButtonClick = None
         self.leftButtonPushed = False
         self.rightButtonPushed = False
@@ -23,7 +26,6 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.edit_display_angle(obj, event)
         self.leftButtonPushed = True
         self.OnLeftButtonDown()
-        return
 
     def left_button_release_event(self, obj, event):
         # print("Left Button released")
@@ -31,7 +33,17 @@ class CustomInteractorStyle(vtk.vtkInteractorStyleTrackballCamera):
         self.leftButtonPushed = False
         self.lastLeftButtonClick = event
         self.OnLeftButtonUp()  # make sure that this goes AFTER the previous function call
-        return
+
+    def middle_button_press_event(self, obj, event):
+        self.middleButtonPushed = True
+        # print("pressed")
+        if self.culling:
+            pass
+        self.OnMiddleButtonDown()
+
+    def middle_button_release_event(self, obj, event):
+        self.middleButtonPushed = False
+        self.OnMiddleButtonUp()
 
     def mouse_button_move_event(self, obj, event):
         super().OnMouseMove()  # keep old movement capability but add more

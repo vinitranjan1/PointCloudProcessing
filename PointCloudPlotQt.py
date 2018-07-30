@@ -3,6 +3,7 @@ from vtk.util import numpy_support
 import sys
 import os
 import cv2
+import re
 import pdb
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,9 +15,10 @@ import time
 from laspy.file import File
 from laspy.header import Header
 from laspy.util import LaspyException
+from AxisAlignedBox3D import AxisAlignedBox3D
 from CustomInteractorStyle import CustomInteractorStyle
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QMessageBox, QSlider
 from PyQt5 import Qt, QtCore, QtGui
 
 
@@ -35,6 +37,12 @@ class PointCloudPlotQt(QWidget):
         self.frame = Qt.QFrame()
         self.hl = Qt.QHBoxLayout()
         self.bl = Qt.QVBoxLayout()
+        # self.cull_state_machine = QtCore.QStateMachine()
+        self.cull_planes_on = False
+        self.default_cull_planes = []
+        self.default_cull_plane_distances = []
+        self.default_cull_planes_bounds = []
+        self.culling_slider = None
 
         self.widgets = []
         self.widget_defaults = []
@@ -43,9 +51,10 @@ class PointCloudPlotQt(QWidget):
         if self.plots is not None:
             for i in range(len(plots)):
                 vtk_widget = QVTKRenderWindowInteractor(self.frame)
-                self.plot_point_cloud_qt(plots[i], vtk_widget)
                 self.widgets.append(vtk_widget)
                 self.hl.addWidget(vtk_widget)
+                self.axes_actors.append(vtk.vtkCubeAxesActor2D())
+                self.plot_point_cloud_qt(plots[i], vtk_widget)
 
             for w in self.widgets:
                 position = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
@@ -63,12 +72,17 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Save Plot", self.__on_save_button_click)
         self.add_button("Collapse", self.__on_collapse_button_click)
         self.add_button("Translate and Rotate XY", self.__on_translate_rotate_xy_button_click)
-        self.add_button("Translate Z", self.__on_translate_z_button_click)
+        self.add_button("Shift Vector", self.__on_shift_vector_click)
         self.add_button("New Origin", self.__on_new_origin_click)
         self.add_button("Rotate by Angle", self.__on_rotate_by_angle_click)
         self.add_button("Rotate 90", self.__on_rotate_90_click)
         self.add_button("Auto Rotate", self.__on_auto_rotate_button_click)
+        self.add_button("Keep Points Inside Box", self.__on_keep_points_inside_box_click)
+        self.add_button("Keep Points Outside Box", self.__on_keep_points_outside_box_click)
+        # self.add_statemachine(self.cull_state_machine,"State", "Off", "On")
+        self.add_button("Cull Planes Toggle", self.__on_cull_planes_toggle)
         self.add_button("Test", self.__on_test_click)
+        # self.hl.addWidget(self.culling_slider)
         self.frame.setLayout(self.hl)
         self.main.setCentralWidget(self.frame)
         self.main.show()
@@ -97,8 +111,14 @@ class PointCloudPlotQt(QWidget):
         corner.SetText(0, "(x, y, z) = (%.3f, %.3f, %.3f)" % (orientation[0], orientation[1], orientation[2]))
         ren.AddActor(corner)
         if self.axes_on:
-            axes = vtk.vtkAxesActor()
-            ren.AddActor(axes)
+            i = self.widgets.index(widget)
+            axes = self.axes_actors[i]
+            axes.SetInputConnection(self.plots[i].outline.GetOutputPort())
+            axes.SetCamera(camera)
+            axes.SetLabelFormat("%6.4g")
+            axes.SetFlyModeToOuterEdges()
+            axes.SetFontFactor(1.2)
+            ren.AddViewProp(axes)
 
         ren.ResetCamera()
 
@@ -114,8 +134,144 @@ class PointCloudPlotQt(QWidget):
         self.bl.addWidget(button)
         button.show()
 
+    # def add_statemachine(self, state_machine, button_name, *args):
+    #     button = QPushButton(button_name, self)
+    #     statemachine = state_machine
+    #     states = []
+    #     for arg in args:
+    #         state = QtCore.QState()
+    #         state.assignProperty(button, "Toggle", arg)
+    #         states.append(state)
+    #     for i in range(len(states)):
+    #         state = states[i]
+    #         try:
+    #             next_state = states[i+1]
+    #         except IndexError:
+    #             next_state = states[0]
+    #         state.addTransition(button.clicked, next_state)
+    #         statemachine.addState(state)
+    #     statemachine.setInitialState(states[0])
+    #     statemachine.start()
+    #     self.bl.addWidget(button)
+    #     button.clicked.connect(self.__cull_state_machine_toggle)
+    #     button.show()
+
+    def __on_cull_planes_toggle(self):
+        # print(states)
+        self.cull_planes_on = not self.cull_planes_on
+        # print(self.cull_planes_on)
+        if self.cull_planes_on:
+            self.__add_culling_slider()
+        else:
+            self.__reset_remove_culling_slider()
+
+    def __distance_between_planes(self, far_plane, near_plane):
+        # assume planes are in form [A, B, C, D] where plane equation is Ax + By + Cz + D = 0
+        far_plane = np.array(far_plane)
+        near_plane = np.array(near_plane)
+        if not far_plane[2] == 0:
+            point_on_far = np.array([0., 0., -far_plane[3] / far_plane[2]])
+        elif not far_plane[1] == 0:
+            point_on_far = np.array([0., -far_plane[3] / far_plane[1], 0.])
+        else:
+            point_on_far = np.array([-far_plane[3] / far_plane[1], 0., 0.])
+
+        if not near_plane[2] == 0:
+            point_on_near = np.array([0., 0., -near_plane[3] / near_plane[2]])
+        elif not near_plane[1] == 0:
+            point_on_near = np.array([0., -near_plane[3] / near_plane[1], 0.])
+        else:
+            point_on_near = np.array([-near_plane[3] / near_plane[0], 0., 0.])
+
+        normal_vector = np.array(far_plane[:3])
+        vector_between_planes = point_on_far - point_on_near
+        return abs(np.dot(vector_between_planes, normal_vector) / np.linalg.norm(normal_vector))
+
+    def __add_culling_slider(self):
+        # w = self.widgets[0]
+        for w in self.widgets:
+            planes = [0] * 24
+            w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
+            self.default_cull_planes.append(planes)
+        for i in range(len(self.widgets)):
+            w = self.widgets[i]
+            planes = [0] * 24
+            w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
+            far_plane = planes[16:20]
+            near_plane = planes[20:]
+            # print(far_plane)
+            # print(near_plane)
+            self.default_cull_plane_distances.append(self.__distance_between_planes(far_plane, near_plane))
+            # print(abs(dist_between_planes))
+            vtkplanes = vtk.vtkPlanes()
+            vtkplanes.SetFrustumPlanes(planes)
+            frustum_source = vtk.vtkFrustumSource()
+            frustum_source.SetPlanes(vtkplanes)
+            frustum_source.Update()
+            # self.plots[i].mapper.SetInputConnection(testsource.GetOutputPort())
+            self.plots[i].frustumMapper.SetInputData(frustum_source.GetOutput())
+            actor = vtk.vtkActor()
+            actor.SetMapper(self.plots[i].frustumMapper)
+            actor.GetProperty().SetOpacity(0)
+            self.default_cull_planes_bounds.append(w.GetRenderWindow().GetInteractor().
+                                                   GetInteractorStyle().ren.ComputeVisiblePropBounds())
+            # w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.AddActor(actor)
+            w.GetRenderWindow().Render()
+            # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
+            # self.plots[i].mapper.SetInputData
+
+        self.culling_slider = QSlider()
+        self.culling_slider.setMinimum(0)
+        self.culling_slider.setMaximum(100)
+        self.culling_slider.setValue(100)
+        self.culling_slider.setTickInterval(1)
+        self.culling_slider.setTracking(True)
+        self.culling_slider.valueChanged.connect(self.__culling_slider_move)
+        self.culling_slider.show()
+        self.hl.addWidget(self.culling_slider)
+
+    def __culling_slider_move(self):
+        # self.culling_slider.setValue(50)
+        self.culling_slider.hide()  # slider wasn't updating, this is a really hacky solution
+        self.culling_slider.show()
+        for i in range(len(self.widgets)):
+            w = self.widgets[i]
+            planes = [0] * 24
+            w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
+            max_distance = self.default_cull_plane_distances[i]
+            far_plane = planes[16:20]
+            near_plane = planes[20:]
+            z_diff = self.default_cull_planes_bounds[i][5] - self.default_cull_planes_bounds[i][4]
+            new_z = self.default_cull_planes_bounds[i][4] + z_diff * self.culling_slider.value() / 100.
+            new_bounds = self.default_cull_planes_bounds[i] + tuple()
+            new_bounds = np.array(new_bounds)
+            new_bounds[5] = new_z
+            # w.GetRenderWindow().GetInteractor().GetInteractorStyle().\
+            #     ren.ComputeVisiblePropBounds(new_bounds)
+            # print(new_bounds)
+            w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCameraClippingRange(new_bounds)
+            # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
+            w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCamera(new_bounds)
+            w.update()
+            w.Render()
+            # print(far_plane)
+            # print(near_plane)
+            #
+            # print(self.default_cull_plane_distances[i])
+        # print(self.culling_slider.value())
+
+        # print("moved")
+
+    def __reset_remove_culling_slider(self):
+        self.culling_slider.setValue(100)
+        self.hl.removeWidget(self.culling_slider)
+        self.culling_slider.hide()
+
     def __on_toggle_axes_click(self):
-        pass
+        for i in range(len(self.axes_actors)):
+            # self.axes_actors[i].SetTotalLength(100, 100, 100)
+            self.widgets[i].Render()
+            self.widgets[i].GetRenderWindow().Render()
 
     def __on_snap_button_click(self):
         first_plot = self.widgets[0]
@@ -175,17 +331,10 @@ class PointCloudPlotQt(QWidget):
         i = self.widgets.index(w)
         self.widget_defaults[i] = (position, focus, viewup)
 
-    # def __on_rotate_button_click(self):
-    #     first_plot = self.widgets[0]
-    #     position = first_plot.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
-    #     focus = first_plot.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFocalPoint()
-    #     viewup = first_plot.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetViewUp()
-    #     print(position, focus, viewup)
-
     def __on_save_button_click(self):
         # note that the next line is correct because "self" refers to the overall PointCloudPlotQt QWidget
         prompt = QInputDialog.getInt(self, "Plot index to save", "Index")
-        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was
+        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was accepted
         if prompt[1]:
             try:
                 to_save = self.widgets[int(prompt[0])]
@@ -294,7 +443,7 @@ class PointCloudPlotQt(QWidget):
         print("Finding histogram")
         plt.hist2d(arr1, arr2, (xbins, ybins), cmap=plt.cm.jet, norm=colors.LogNorm())
         end = time.time() - start
-        print("Finding histogram took %d seconds" % end)
+        print("Finding histogram took %.2f seconds" % end)
         # TODO: .xaxis.label.set_visible(False)
         # plt.imshow(heatmap, extent=extent, origin='lower')
         plt.show()
@@ -332,7 +481,7 @@ class PointCloudPlotQt(QWidget):
         print("Finding histogram")
         plt.hist(arr, bins=bins)
         end = time.time() - start
-        print("Finding histogram took %d seconds" % end)
+        print("Finding histogram took %.2f seconds" % end)
         # plt.imshow(heatmap, extent=extent, origin='lower')
         plt.show()
 
@@ -341,37 +490,122 @@ class PointCloudPlotQt(QWidget):
         # p1 = (1.27, -1.55)
         # p2 = (-26.2, -74.06)
         # p3 = (-55.2, 63.53)
-        p0x = QInputDialog.getDouble(self, "First Point X", "", decimals=2)
-        if p0x[1]:
-            p0y = QInputDialog.getDouble(self, "First Point Y", "", decimals=2)
+        prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
+        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
+        if prompt[1]:
+            try:
+                i = prompt[0]
+                w = self.widgets[i]  # only to throw the Index Error if invalid index given
+            except IndexError:
+                QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
+                return
+        else:
+            return #TODO finish this refactor
+        comp = re.compile('\([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\s*,\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\)')
+        corner0 = QInputDialog.getText(self, "Bounding Point 1", "")
+        # regex from https://stackoverflow.com/questions/12929308/
+        #                                   python-regular-expression-that-matches-floating-point-numbers/12929311
+
+        if corner0[1]:
+            m = comp.match(corner0[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float0 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
         else:
             return
-        if p0y[1]:
-            p1x = QInputDialog.getDouble(self, "Second Point X", "", decimals=2)
+
+        corner1 = QInputDialog.getText(self, "Bounding Point 2", "")
+        if corner1[1]:
+            m = comp.match(corner1[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float1 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
         else:
             return
-        if p1x[1]:
-            p1y = QInputDialog.getDouble(self, "Second Point Y", "", decimals=2)
+
+        corner2 = QInputDialog.getText(self, "Bounding Point 3", "")
+        if corner2[1]:
+            m = comp.match(corner2[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float2 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
         else:
             return
-        if p1y[1]:
-            p2x = QInputDialog.getDouble(self, "Third Point X", "", decimals=2)
+
+        corner3 = QInputDialog.getText(self, "Bounding Point 3", "")
+        if corner3[1]:
+            m = comp.match(corner3[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float3 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
         else:
             return
-        if p2x[1]:
-            p2y = QInputDialog.getDouble(self, "Third Point Y", "", decimals=2)
+
+        self.__translate_rotate_xy_helper(corner_float0, corner_float1, corner_float2, corner_float3)
+
+    def __on_shift_vector_click(self):
+        prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
+        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
+        if prompt[1]:
+            try:
+                i = prompt[0]
+                w = self.widgets[i]  # only to throw the Index Error if invalid index given
+            except IndexError:
+                QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
+                return
+        else:
+            return  # TODO finish this refactor
+
+        comp = re.compile('\([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?'
+                          '(\s*,\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?){2}\)')
+        shift = QInputDialog.getText(self, "Shift Vector", "")
+        # regex from https://stackoverflow.com/questions/12929308/
+        #                                   python-regular-expression-that-matches-floating-point-numbers/12929311
+
+        if shift[1]:
+            m = comp.match(shift[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                shift_float0 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
         else:
             return
-        if p2y[1]:
-            p3x = QInputDialog.getDouble(self, "Fourth Point X", "", decimals=2)
-        else:
-            return
-        if p3x[1]:
-            p3y = QInputDialog.getDouble(self, "Fourth Point Y", "", decimals=2)
-        else:
-            return
-        if p3y[1]:
-            self.__translate_rotate_xy_helper((p0x[0], p0y[0]), (p1x[0], p1y[0]), (p2x[0], p2y[0]), (p3x[0], p3y[0]))
+
+        self.__translate_helper(i, shift_float0)
 
     def __translate_rotate_xy_helper(self, p0, p1, p2, p3):
         new_origin = np.array(p0)
@@ -411,44 +645,22 @@ class PointCloudPlotQt(QWidget):
         w.GetRenderWindow().Render()
         self.__on_set_default_view_button()
 
-    def __on_translate_z_button_click(self):
-        shift = QInputDialog.getDouble(self, "Z Shift", "", decimals=2)
-        if shift[1]:
-            self.__translate_z_helper(shift[0])
-
-    def __translate_z_helper(self, shift):
-        w = self.app.focusWidget()
-        i = self.widgets.index(w)
-        points = self.plots[i].getPoints()
-        num_points = points.GetNumberOfPoints()
-
-        for k in trange(num_points, desc="Shifting"):
-            p = points.GetPoint(k)
-            old = np.asarray(p)
-            new = np.array([old[0], old[1], old[2] + shift])
-            points.SetPoint(k, new)
-        self.plots[i].vtkCells.Modified()
-        self.plots[i].vtkPoints.Modified()
-        self.plots[i].vtkDepth.Modified()
-        w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCamera()
-        w.GetRenderWindow().Render()
-        self.__on_set_default_view_button()
-
     def __on_new_origin_click(self):
         w = self.app.focusWidget()
         i = self.widgets.index(w)
         points = self.plots[i].getPoints()
         num_points = points.GetNumberOfPoints()
 
-    def __translate_helper(self, shift, i):
+    def __translate_helper(self, i, shift):
         w = self.widgets[i]
         points = self.plots[i].getPoints()
         num_points = points.GetNumberOfPoints()
+        shift = np.array(shift)
 
         for k in trange(num_points, desc="Shifting"):
             p = points.GetPoint(k)
             old = np.asarray(p)
-            new = np.array([old[0] + shift[0], old[1] + shift[1], old[2] + shift[2]])
+            new = old + shift
             points.SetPoint(k, new)
         self.plots[i].vtkCells.Modified()
         self.plots[i].vtkPoints.Modified()
@@ -599,8 +811,8 @@ class PointCloudPlotQt(QWidget):
         avg_slope = np.mean(slopes_to_avg)
         angle = np.arctan2(avg_slope, 1)
         # rot_matrix = np.matrix([[np.cos(-angle), -np.sin(-angle)], [np.sin(-angle), np.cos(-angle)]])
-        print(angle)
-        print(slopes_used)
+        print("Rotating by %.4f degrees" % (angle * 180. / np.pi))
+        # print(slopes_used)
         if not np.isnan(angle):
             self.__rotation_helper(prompt[0], angle)
             # if slopes_used == "neg":
@@ -620,7 +832,7 @@ class PointCloudPlotQt(QWidget):
                 return
         else:
             return
-        rotation = QInputDialog.getDouble(self, "Angle (Counterclockwise)", "In Degrees", decimals=2)
+        rotation = QInputDialog.getDouble(self, "Angle (Counterclockwise)", "In Degrees", decimals=4)
         if rotation[1]:
             angle = rotation[0] * np.pi / 180.
         else:
@@ -660,11 +872,11 @@ class PointCloudPlotQt(QWidget):
             # sys.exit()
             points.SetPoint(k, new)
         temp = subsample_frac(self.plots[i].getPointsAsArray(), .1)
-        temp_threshold = threshold_filter(temp, threshold=.01)
-        minX = min([p[0] for p in temp_threshold])
-        minY = min([p[1] for p in temp_threshold])
+        temp_threshold = threshold_filter(temp, threshold=.05)
+        minx = min([p[0] for p in temp_threshold])
+        miny = min([p[1] for p in temp_threshold])
         del temp_threshold
-        minZ = 0
+        minz = 0
         # try:
         #     temp_threshold = threshold_filter(temp, dim_to_collapse="Y", threshold=.01)
         #     minZ = min([p[2] for p in temp_threshold])
@@ -674,41 +886,152 @@ class PointCloudPlotQt(QWidget):
         #     print("Couldn't shift Z")
 
         del temp
-        self.__translate_helper([-minX, -minY, -minZ], i)
-        #
-        # self.plots[i].vtkCells.Modified()
-        # self.plots[i].vtkPoints.Modified()
-        # self.plots[i].vtkDepth.Modified()
-        # # print(self.plots[i].GetUserTransform())
-        # # w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.AddActor(vtk.vtkAxesActor())
-        # self.widgets[i].GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCamera()
-        # self.widgets[i].GetRenderWindow().Render()
-        # self.__on_set_default_view_button()
+        self.__translate_helper(i, [-minx, -miny, -minz])
+
+    def __on_keep_points_inside_box_click(self):
+        prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
+        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
+        if prompt[1]:
+            try:
+                i = prompt[0]
+                w = self.widgets[i]  # only to throw the Index Error if invalid index given
+            except IndexError:
+                QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
+                return
+        else:
+            return
+        corner0 = QInputDialog.getText(self, "Bounding Point 1", "")
+        # regex from https://stackoverflow.com/questions/12929308/
+        #                                   python-regular-expression-that-matches-floating-point-numbers/12929311
+        comp = re.compile('\([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?'
+                          '(\s*,\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?){2}\)')
+        if corner0[1]:
+            m = comp.match(corner0[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float0 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
+        else:
+            return
+
+        corner1 = QInputDialog.getText(self, "Bounding Point 2", "")
+        if corner1[1]:
+            m = comp.match(corner1[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float1 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
+        else:
+            return
+
+        # print(corner_float0)
+        # print(corner_float1)
+        bounding_box = AxisAlignedBox3D(corner_float0, corner_float1)
+        new_min = bounding_box.min()
+        points_to_keep = []
+        point_array = self.plots[i].getPointsAsArray()
+        for point in tqdm(point_array, total=len(point_array), desc="Clearing Points"):
+            if bounding_box.contains_point(point):
+                points_to_keep.append(point[:])
+        del point_array
+        self.plots[i].clearPoints()
+        for point in tqdm(points_to_keep, total=len(points_to_keep), desc="Constructing PC"):
+            self.plots[i].addPoint(point)
+        del points_to_keep
+        self.__translate_helper(i, -new_min)
+
+    def __on_keep_points_outside_box_click(self):
+        prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
+        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
+        if prompt[1]:
+            try:
+                i = prompt[0]
+                w = self.widgets[i]  # only to throw the Index Error if invalid index given
+            except IndexError:
+                QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
+                return
+        else:
+            return
+        corner0 = QInputDialog.getText(self, "Bounding Point 1", "")
+        # regex from https://stackoverflow.com/questions/12929308/
+        #                                   python-regular-expression-that-matches-floating-point-numbers/12929311
+        comp = re.compile('\([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?'
+                          '(\s*,\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?){2}\)')
+        if corner0[1]:
+            m = comp.match(corner0[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float0 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
+        else:
+            return
+
+        corner1 = QInputDialog.getText(self, "Bounding Point 2", "")
+        if corner1[1]:
+            m = comp.match(corner1[0])
+            if m:
+                # print("Match found: ", m.group())
+                temp = m.group().replace("(", "")
+                temp = temp.replace(")", "")
+                temp = re.sub(r"\s+", "", temp).split(",")
+                corner_float1 = [float(i) for i in temp]
+                # print(corner_float0)
+            else:
+                print("Invalid point syntax")
+                return
+        else:
+            return
+
+        bounding_box = AxisAlignedBox3D(corner_float0, corner_float1)
+        new_min = bounding_box.min()
+        points_to_keep = []
+        point_array = self.plots[i].getPointsAsArray()
+        for point in tqdm(point_array, total=len(point_array), desc="Clearing Points"):
+            if not bounding_box.contains_point(point):
+                points_to_keep.append(point[:])
+        self.plots[i].clearPoints()
+        del point_array
+        for point in tqdm(points_to_keep, total=len(points_to_keep), desc="Constructing PC"):
+            self.plots[i].addPoint(point)
+        del points_to_keep
 
     def __on_test_click(self):
-        p0 = (-27.6, -12.1)
-        p1 = (1.27, -1.55)
-        p2 = (-26.2, -74.06)
-        p3 = (-55.2, 63.53)
-        self.__translate_rotate_xy_helper(p0, p1, p2, p3)
-        w = self.app.focusWidget()
-        i = self.widgets.index(w)
-        points = self.plots[i].getPointsAsArray()
-        print(type(points))
-        points = threshold_filter(points, .03)
-        # self.plots[i].clearPoints()
-
-    # def __on_test_click(self):
-    #     w = self.app.focusWidget()
-    #     allx = []
-    #     i = self.widgets.index(w)
-    #     points = self.plots[i].getPoints()
-    #     for k in tqdm(range(points.GetNumberOfPoints()), total=points.GetNumberOfPoints(), desc="Getting X"):
-    #         p = points.GetPoint(k)
-    #         x = p[2]
-    #         allx.append(x)
-    #     plt.hist(allx, bins=1000, range=(-2, 4))
-    #     plt.show()
+        w = self.widgets[0]
+        # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
+        planes = [0] * 24
+        # position = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
+        # focus = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFocalPoint()
+        # viewup = [0., 0., 1.]
+        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().set_camera_orientation(position, focus, viewup)
+        # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition())
+        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetViewUp([0., 1., 0.])
+        # w.GetRenderWindow().Render()
+        # w.update()
+        w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
+        # print(planes)
+        print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
+        temp = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange()
+        w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetClippingRange(temp[0], temp[0])
+        print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ComputeVisiblePropBounds())
+        w.Render()
 
 
 def create_point_cloud_plot_qt(plots, input_header=None, axes_on=False):

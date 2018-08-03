@@ -5,6 +5,7 @@ import os
 import cv2
 import re
 import pdb
+import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
@@ -17,6 +18,7 @@ from laspy.header import Header
 from laspy.util import LaspyException
 from AxisAlignedBox3D import AxisAlignedBox3D
 from CustomInteractorStyle import CustomInteractorStyle
+from VtkTimerCallback import VtkTimerCallback
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QMessageBox, QSlider
 from PyQt5 import Qt, QtCore, QtGui
@@ -71,6 +73,7 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Set New Default View", self.__on_set_default_view_button)
         self.add_button("Save Plot", self.__on_save_button_click)
         self.add_button("Collapse", self.__on_collapse_button_click)
+        self.add_button("Collapse Uniform", self.__on_collapse_uniform_button_click)
         self.add_button("Translate and Rotate XY", self.__on_translate_rotate_xy_button_click)
         self.add_button("Shift Vector", self.__on_shift_vector_click)
         self.add_button("New Origin", self.__on_new_origin_click)
@@ -186,6 +189,16 @@ class PointCloudPlotQt(QWidget):
         normal_vector = np.array(far_plane[:3])
         vector_between_planes = point_on_far - point_on_near
         return abs(np.dot(vector_between_planes, normal_vector) / np.linalg.norm(normal_vector))
+
+    @staticmethod
+    def __binary_search(arr, left, right, x):
+        while left <= right:
+            mid = left + int((right - left) / 2)
+            if arr[mid] < x:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return left-1
 
     def __add_culling_slider(self):
         # w = self.widgets[0]
@@ -399,8 +412,19 @@ class PointCloudPlotQt(QWidget):
         else:
             self.__collapse_two_dim(to_collapse[0])
 
-    def __collapse_one_dim(self, to_collapse):
-        mesh = QInputDialog.getDouble(self, "Meshing Distance", "In meters", decimals=2)
+    def __on_collapse_uniform_button_click(self):
+        to_collapse = QInputDialog.getText(self, "Dimension(s) to collapse:", "Here")
+        # print(to_collapse)
+        if not to_collapse[1]:
+            return
+        if not len(to_collapse[0]) == 1:
+            QMessageBox.about(self, "Error", "Invalid input, must be of form such as 'Z'")
+            return
+        else:
+            self.__collapse_one_dim(to_collapse[0], uniform_collapse=True)
+
+    def __collapse_one_dim(self, to_collapse, uniform_collapse=False):
+        mesh = QInputDialog.getDouble(self, "Meshing Distance", "In meters", decimals=3)
         axes_on = QInputDialog.getItem(self, "Axes On?", "", ["yes", "no"])
         if axes_on[0] == "yes":
             axes_setting = "on"
@@ -440,13 +464,41 @@ class PointCloudPlotQt(QWidget):
         xbins = int((max(arr1) - min(arr1)) / float(mesh[0]))
         ybins = int((max(arr2) - min(arr2)) / float(mesh[0]))
         start = time.time()
-        print("Finding histogram")
-        plt.hist2d(arr1, arr2, (xbins, ybins), cmap=plt.cm.jet, norm=colors.LogNorm())
-        end = time.time() - start
-        print("Finding histogram took %.2f seconds" % end)
-        # TODO: .xaxis.label.set_visible(False)
-        # plt.imshow(heatmap, extent=extent, origin='lower')
-        plt.show()
+        if uniform_collapse:
+            hist, xedges, yedges = np.histogram2d(arr1, arr2, bins=(xbins, ybins))
+            # weights = []
+            # for i in hist:
+            #     new_array = []
+            #     for j in i:
+            #         new_array.append(1) if j > 0 else new_array.append(0)
+            #     weights.append(new_array)
+            # weights = np.array(weights)
+            # print(weights.shape)
+            # assert len(hist) == len(weights)
+            # assert len(hist[0]) == len(weights[0])
+            cutoff = 0
+            default_weight = 1.
+            weights = []
+            for i in trange(len(arr1), desc="Normalizing"):
+                x_coord = self.__binary_search(xedges, 0, len(xedges) - 1, arr1[i])
+                y_coord = self.__binary_search(yedges, 0, len(yedges) - 1, arr2[i])
+                if hist[x_coord][y_coord] > cutoff:
+                    weights.append(default_weight / float(hist[x_coord][y_coord]))
+                else:
+                    weights.append(0)
+                # pdb.set_trace()
+            plt.hist2d(arr1, arr2, bins=(xbins, ybins), cmap=plt.cm.spring, weights=weights, norm=colors.LogNorm())
+            ax = plt.gca()
+            ax.set_facecolor([0, 0, 0])
+            end = time.time() - start
+            print("Finding histogram took %.2f seconds" % end)
+            plt.show()
+        else:
+            print("Finding histogram")
+            plt.hist2d(arr1, arr2, (xbins, ybins), cmap=plt.cm.jet, norm=colors.LogNorm())
+            end = time.time() - start
+            print("Finding histogram took %.2f seconds" % end)
+            plt.show()
 
     def __collapse_two_dim(self, to_collapse):
         mesh = QInputDialog.getText(self, "Meshing Distance", "In meters")
@@ -502,7 +554,7 @@ class PointCloudPlotQt(QWidget):
         else:
             return #TODO finish this refactor
         comp = re.compile('\([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\s*,\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\)')
-        corner0 = QInputDialog.getText(self, "Bounding Point 1", "")
+        corner0 = QInputDialog.getText(self, "Bounding Point 0", "")
         # regex from https://stackoverflow.com/questions/12929308/
         #                                   python-regular-expression-that-matches-floating-point-numbers/12929311
 
@@ -521,7 +573,7 @@ class PointCloudPlotQt(QWidget):
         else:
             return
 
-        corner1 = QInputDialog.getText(self, "Bounding Point 2", "")
+        corner1 = QInputDialog.getText(self, "Bounding Point 1", "")
         if corner1[1]:
             m = comp.match(corner1[0])
             if m:
@@ -537,7 +589,7 @@ class PointCloudPlotQt(QWidget):
         else:
             return
 
-        corner2 = QInputDialog.getText(self, "Bounding Point 3", "")
+        corner2 = QInputDialog.getText(self, "Bounding Point 2", "")
         if corner2[1]:
             m = comp.match(corner2[0])
             if m:
@@ -1015,23 +1067,43 @@ class PointCloudPlotQt(QWidget):
 
     def __on_test_click(self):
         w = self.widgets[0]
+
+        sim = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission2.csv"
+        # sim = "../Simulation/pose_log_mission1.csv"
+
+        with open(sim, 'r') as sim_file:
+            sim_reader = csv.reader(sim_file)
+            event_list = list(sim_reader)
+
+            cb = VtkTimerCallback(renderwindow=w.GetRenderWindow(),
+                                  renderer=w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren,
+                                  iterations=len(event_list))
+
+            w.GetRenderWindow().GetInteractor().AddObserver('TimerEvent', lambda obj, event:
+                                                            cb.execute(obj, event, event_list, tracking=True))
+
+            timer_id = w.GetRenderWindow().GetInteractor().CreateRepeatingTimer(100)
+            cb.timer_id = timer_id
+            w.GetRenderWindow().GetInteractor().Start()
+
+        # w = self.widgets[0]
+        # # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
+        # planes = [0] * 24
+        # # position = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
+        # # focus = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFocalPoint()
+        # # viewup = [0., 0., 1.]
+        # # w.GetRenderWindow().GetInteractor().GetInteractorStyle().set_camera_orientation(position, focus, viewup)
+        # # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition())
+        # # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetViewUp([0., 1., 0.])
+        # # w.GetRenderWindow().Render()
+        # # w.update()
+        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
+        # # print(planes)
         # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
-        planes = [0] * 24
-        # position = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
-        # focus = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFocalPoint()
-        # viewup = [0., 0., 1.]
-        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().set_camera_orientation(position, focus, viewup)
-        # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition())
-        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetViewUp([0., 1., 0.])
-        # w.GetRenderWindow().Render()
-        # w.update()
-        w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
-        # print(planes)
-        print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
-        temp = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange()
-        w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetClippingRange(temp[0], temp[0])
-        print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ComputeVisiblePropBounds())
-        w.Render()
+        # temp = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange()
+        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetClippingRange(temp[0], temp[0])
+        # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ComputeVisiblePropBounds())
+        # w.Render()
 
 
 def create_point_cloud_plot_qt(plots, input_header=None, axes_on=False):

@@ -124,7 +124,7 @@ if __name__ == '__main__':
         help="Path of directory from which to load log data.")
     parser.add_argument('-v', '--vis-save', dest='vis_save_pickle', default='.',
         help="Path to which the visualization initialization is saved.")
-    parser.add_argument('-t', '--linsim-dir', dest='linsim', default='/Users/eckman/Documents/LineageLogistics/simviz/vtk/datafiles/MaraLoma.linsim',
+    parser.add_argument('-t', '--linsim-dir', dest='linsim', default='~/PycharmProjects/LineageProject/simviz/vtk/datafiles/MaraLoma.linsim',
         help="Path to which the visualization initialization is saved.")
     parser.add_argument('-o', '--overwrite-pallet', dest='overwrite', action='store_true',
         help="Overwrite saved pallet file if it exists.")

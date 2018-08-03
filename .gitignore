@@ -18,8 +18,10 @@ MantecaRoom6/
 MantecaFiltered/
 MantecaRailDock/
 LASToolsFolder/
+simviz/*
 MantecaCompressorRoom/
 MantecaDock/
+Simulation/
 WatsonvilleEngineRoom/
 AllentownRoom2_Cleaned.txt
 *.las

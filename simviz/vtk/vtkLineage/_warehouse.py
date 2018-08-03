@@ -125,7 +125,7 @@ class Warehouse():
         self._config = self._loadConfigDataSimDir(path, os.path.join('design', 'warehouse.ini'))
         # ---Chris Addon vvv--------------------------------------------------------------------------------------------
 
-        path1 = '/Users/eckman/Documents/LineageLogistics/simviz/vtk/Sunnyvale/Input_WarehouseMap.csv'
+        path1 = 'Sunnyvale/Input_WarehouseMap.csv'
         input_warehousemap = open(path1, 'rt')
         read_warehousemap = csv.reader(input_warehousemap)
         reach_map = {}
@@ -149,7 +149,7 @@ class Warehouse():
 
         # ---Chris Addon vvv--------------------------------------------------------------------------------------------
 
-        path2 = '/Users/eckman/Documents/LineageLogistics/simviz/vtk/Sunnyvale/Output_Movements.csv'
+        path2 = 'Sunnyvale/Output_Movements.csv'
         output_movements = open(path2, 'rt')
         read_movements = csv.reader(output_movements)
         _output_data = {}

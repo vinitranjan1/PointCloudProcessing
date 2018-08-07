@@ -42,22 +42,28 @@ class AxisAlignedBox3D:
 
     # return the smallest/largest x/y/z coordinate
     def min_x(self):
-        return self.point1[0] if self.point1[0] < self.point2[0] else self.point2[0]
+        return min(self.point1[0], self.point2[0])
+        # return self.point1[0] if self.point1[0] < self.point2[0] else self.point2[0]
 
     def min_y(self):
-        return self.point1[1] if self.point1[1] < self.point2[1] else self.point2[1]
+        return min(self.point1[1], self.point2[1])
+        # return self.point1[1] if self.point1[1] < self.point2[1] else self.point2[1]
 
     def min_z(self):
-        return self.point1[2] if self.point1[2] < self.point2[2] else self.point2[2]
+        return min(self.point1[2], self.point2[2])
+        # return self.point1[2] if self.point1[2] < self.point2[2] else self.point2[2]
 
     def max_x(self):
-        return self.point1[0] if self.point1[0] > self.point2[0] else self.point2[0]
+        return max(self.point1[0], self.point2[0])
+        # return self.point1[0] if self.point1[0] > self.point2[0] else self.point2[0]
 
     def max_y(self):
-        return self.point1[1] if self.point1[1] > self.point2[1] else self.point2[1]
+        return max(self.point1[1], self.point2[1])
+        # return self.point1[1] if self.point1[1] > self.point2[1] else self.point2[1]
 
     def max_z(self):
-        return self.point1[2] if self.point1[2] > self.point2[2] else self.point2[2]
+        return min(self.point1[2], self.point2[2])
+        # return self.point1[2] if self.point1[2] > self.point2[2] else self.point2[2]
 
     def center_x(self):
         return (self.min_x() + self.max_x()) / 2.0
@@ -69,14 +75,14 @@ class AxisAlignedBox3D:
         return (self.min_z() + self.max_z()) / 2.0
 
     # return the coordinates of the box with smallest of each value
-    def min(self):
+    def min_corner(self):
         return array([self.min_x(), self.min_y(), self.min_z()], dtype=float32)
 
-    def max(self):
+    def max_corner(self):
         return array([self.max_x(), self.max_y(), self.max_z()], dtype=float32)
 
     def get_dimensions(self):
-        return self.max() - self.min()
+        return self.max_corner() - self.min_corner()
 
     def get_centroid(self):
         return array([self.center_x(), self.center_y(), self.center_z()], dtype=float32)
@@ -119,4 +125,4 @@ class AxisAlignedBox3D:
              or self.contains_point(other_corners[6]) or self.contains_point(other_corners[7]))
 
     def equals_box(self, other_box):
-        return all(self.max() == other_box.max()) and all(self.min() == other_box.min())
+        return all(self.max_corner() == other_box.max_corner()) and all(self.min_corner() == other_box.min_corner())

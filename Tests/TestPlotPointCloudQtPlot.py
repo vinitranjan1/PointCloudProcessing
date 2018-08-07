@@ -34,8 +34,8 @@ sys.path.append('../')
 # input1 = "../MantecaFiltered/warehouse.las"
 # input2 = "../MantecaFiltered/warehouseSlice.las"
 # input1 = "../MantecaFiltered/raildockFS.laz"
-# input1 = "../MantecaFiltered/Manteca.las"
-input1 = "../MantecaFiltered/MantecaSlice.las"
+# input1 = "../MantecaFiltered/room1FS.laz"
+# input1 = "../MantecaFiltered/MantecaSlice.las"
 input1 = "../MantecaFiltered/MantecaRailSlice.las"
 # input1 = "../MantecaFiltered/engineRoomFS.laz"
 # input2 = "../MantecaCompressorRoom/compressorRoom.las"
@@ -61,8 +61,8 @@ with File(input1, mode='r') as f:
     # pc2 = create_vtkpc_from_array(points2)
     # to_plot.append(pc2)
 
-    points = read_raw_las_data(input1)
-    # points = subsample_frac_from_las_data(input1, .01)
+    # points = read_raw_las_data(input1)
+    points = subsample_frac_from_las_data(input1, .01)
     pc = create_vtkpc_from_array(points)
     to_plot.append(pc)
 

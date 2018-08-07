@@ -1068,23 +1068,30 @@ class PointCloudPlotQt(QWidget):
     def __on_test_click(self):
         w = self.widgets[0]
 
-        sim = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission2.csv"
-        # sim = "../Simulation/pose_log_mission1.csv"
+        sim1 = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission1_may_3.csv"
+        sim2 = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission1.csv"
+        sim3 = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission2.csv"
+        sims = [sim1, sim2, sim3]
 
-        with open(sim, 'r') as sim_file:
-            sim_reader = csv.reader(sim_file)
-            event_list = list(sim_reader)
+        event_lists = []
 
-            cb = VtkTimerCallback(renderwindow=w.GetRenderWindow(),
-                                  renderer=w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren,
-                                  iterations=len(event_list))
+        for sim in sims:
+            with open(sim, 'r') as sim_file:
+                sim_reader = csv.reader(sim_file)
+                event_list = list(sim_reader)
+                event_lists.append(event_list)
 
-            w.GetRenderWindow().GetInteractor().AddObserver('TimerEvent', lambda obj, event:
-                                                            cb.execute(obj, event, event_list, tracking=True))
+        cb = VtkTimerCallback(renderwindow=w.GetRenderWindow(),
+                              renderer=w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren,
+                              event_lists=event_lists, iterations=[len(e) for e in event_lists])
 
-            timer_id = w.GetRenderWindow().GetInteractor().CreateRepeatingTimer(100)
-            cb.timer_id = timer_id
-            w.GetRenderWindow().GetInteractor().Start()
+        w.GetRenderWindow().GetInteractor().AddObserver('TimerEvent', lambda obj, event:
+                                                        cb.execute(obj, event, tracking=False,
+                                                                   arrows=True, camera_track=-1))
+
+        timer_id = w.GetRenderWindow().GetInteractor().CreateRepeatingTimer(100)
+        cb.timer_id = timer_id
+        w.GetRenderWindow().GetInteractor().Start()
 
         # w = self.widgets[0]
         # # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())

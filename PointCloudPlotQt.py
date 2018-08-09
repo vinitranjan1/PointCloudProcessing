@@ -76,7 +76,6 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Collapse Uniform", self.__on_collapse_uniform_button_click)
         self.add_button("Translate and Rotate XY", self.__on_translate_rotate_xy_button_click)
         self.add_button("Shift Vector", self.__on_shift_vector_click)
-        self.add_button("New Origin", self.__on_new_origin_click)
         self.add_button("Rotate by Angle", self.__on_rotate_by_angle_click)
         self.add_button("Rotate 90", self.__on_rotate_90_click)
         self.add_button("Auto Rotate", self.__on_auto_rotate_button_click)
@@ -84,6 +83,7 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Keep Points Outside Box", self.__on_keep_points_outside_box_click)
         # self.add_statemachine(self.cull_state_machine,"State", "Off", "On")
         self.add_button("Cull Planes Toggle", self.__on_cull_planes_toggle)
+        self.add_button("Simulate", self.__on_simulate_button_click)
         self.add_button("Test", self.__on_test_click)
         # self.hl.addWidget(self.culling_slider)
         self.frame.setLayout(self.hl)
@@ -136,28 +136,6 @@ class PointCloudPlotQt(QWidget):
         button.clicked.connect(call)
         self.bl.addWidget(button)
         button.show()
-
-    # def add_statemachine(self, state_machine, button_name, *args):
-    #     button = QPushButton(button_name, self)
-    #     statemachine = state_machine
-    #     states = []
-    #     for arg in args:
-    #         state = QtCore.QState()
-    #         state.assignProperty(button, "Toggle", arg)
-    #         states.append(state)
-    #     for i in range(len(states)):
-    #         state = states[i]
-    #         try:
-    #             next_state = states[i+1]
-    #         except IndexError:
-    #             next_state = states[0]
-    #         state.addTransition(button.clicked, next_state)
-    #         statemachine.addState(state)
-    #     statemachine.setInitialState(states[0])
-    #     statemachine.start()
-    #     self.bl.addWidget(button)
-    #     button.clicked.connect(self.__cull_state_machine_toggle)
-    #     button.show()
 
     def __on_cull_planes_toggle(self):
         # print(states)
@@ -308,33 +286,6 @@ class PointCloudPlotQt(QWidget):
                 set_camera_orientation(default[0], default[1], default[2])
             w.update()
             w.GetRenderWindow().GetInteractor().GetInteractorStyle().edit_display_angle()
-
-    # def __on_translate_to_origin_button_click(self):
-    #     w = self.app.focusWidget()
-    #     e = w.GetRenderWindow().GetInteractor().GetEventPosition()
-    #     print(e)
-    #     w.GetRenderWindow().GetInteractor().GetPicker().\
-    #         Pick(e[0], e[1], 0, w.GetRenderWindow().GetRenderers().GetFirstRenderer())
-    #     p = np.asarray(w.GetRenderWindow().GetInteractor().GetPicker().GetPickPosition())
-    #     # p[2] = 0
-    #     print(p)
-    #     i = self.widgets.index(w)
-    #     # points = numpy_support.vtk_to_numpy(self.plots[i].vtkPolyData)
-    #     points = self.plots[i].getPoints()
-    #     num_points = points.GetNumberOfPoints()
-    #
-    #     for k in trange(num_points, desc="Shifting"):
-    #         old = np.asarray(points.GetPoint(k))
-    #         points.SetPoint(k, old-p)
-    #     self.plots[i].vtkCells.Modified()
-    #     self.plots[i].vtkPoints.Modified()
-    #     self.plots[i].vtkDepth.Modified()
-    #     # print(self.plots[i].GetUserTransform())
-    #     # w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.AddActor(vtk.vtkAxesActor())
-    #     w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCamera()
-    #     w.GetRenderWindow().Render()
-    #     # print(old-p)
-    #     # print(p)
 
     def __on_set_default_view_button(self):
         w = self.app.focusWidget()
@@ -538,10 +489,6 @@ class PointCloudPlotQt(QWidget):
         plt.show()
 
     def __on_translate_rotate_xy_button_click(self):
-        # p0 = (-27.6, -12.1)
-        # p1 = (1.27, -1.55)
-        # p2 = (-26.2, -74.06)
-        # p3 = (-55.2, 63.53)
         prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -697,12 +644,6 @@ class PointCloudPlotQt(QWidget):
         w.GetRenderWindow().Render()
         self.__on_set_default_view_button()
 
-    def __on_new_origin_click(self):
-        w = self.app.focusWidget()
-        i = self.widgets.index(w)
-        points = self.plots[i].getPoints()
-        num_points = points.GetNumberOfPoints()
-
     def __translate_helper(self, i, shift):
         w = self.widgets[i]
         points = self.plots[i].getPoints()
@@ -784,11 +725,6 @@ class PointCloudPlotQt(QWidget):
             y_int = _y0 - _slope * _x0
             return _slope * _p + y_int
 
-        # print(img_xmin, img_xmax)
-        # print(hist_xmin, hist_xmax)
-        # print("###")
-        # print(img_ymin, img_ymax)
-        # print(hist_xmin, hist_xmax)
         for i in range(a):
             cv2.line(img, (lines[i][0][0], lines[i][0][1]), (lines[i][0][2], lines[i][0][3]), (0, 0, 255), 1,
                      cv2.LINE_AA)
@@ -813,18 +749,6 @@ class PointCloudPlotQt(QWidget):
             cl = m * x0 - y0
             # print(p0[0], p0[1], x0, y0)
         cv2.imwrite(image_fname_lines, img)
-        # rot_slope = np.mean(pos_slopes)  #TODO: make more robust by binning slopes (~.01) and taking mean of highest
-        # cv2.namedWindow(image_file, cv2.WINDOW_NORMAL)
-        # cv2.resizeWindow(image_file, 600, 600)
-        #
-        # cv2.imshow(image_file, img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # print(rot_slope)
-        # angle = np.arctan2(rot_slope, 1)
-        # print(angle)
-        # print("###")
-
         # positive ones
         try:
             pos_num_bins = int((max(pos_unscale_slopes) - min(pos_unscale_slopes)) / .001)
@@ -867,10 +791,6 @@ class PointCloudPlotQt(QWidget):
         # print(slopes_used)
         if not np.isnan(angle):
             self.__rotation_helper(prompt[0], angle)
-            # if slopes_used == "neg":
-            #     self.__rotation_helper(prompt[0], angle)
-            # else:
-            #     self.__rotation_helper(prompt[0], -angle)
 
     def __on_rotate_by_angle_click(self):
         prompt = QInputDialog.getInt(self, "Plot index to rotate", "Index")
@@ -929,13 +849,6 @@ class PointCloudPlotQt(QWidget):
         miny = min([p[1] for p in temp_threshold])
         del temp_threshold
         minz = 0
-        # try:
-        #     temp_threshold = threshold_filter(temp, dim_to_collapse="Y", threshold=.01)
-        #     minZ = min([p[2] for p in temp_threshold])
-        #     del temp_threshold
-        # except (IndexError, AssertionError):
-        #     minZ = 0
-        #     print("Couldn't shift Z")
 
         del temp
         self.__translate_helper(i, [-minx, -miny, -minz])
@@ -991,7 +904,7 @@ class PointCloudPlotQt(QWidget):
         # print(corner_float0)
         # print(corner_float1)
         bounding_box = AxisAlignedBox3D(corner_float0, corner_float1)
-        new_min = bounding_box.min()
+        new_min = bounding_box.min_corner()
         points_to_keep = []
         point_array = self.plots[i].getPointsAsArray()
         for point in tqdm(point_array, total=len(point_array), desc="Clearing Points"):
@@ -1053,7 +966,7 @@ class PointCloudPlotQt(QWidget):
             return
 
         bounding_box = AxisAlignedBox3D(corner_float0, corner_float1)
-        new_min = bounding_box.min()
+        new_min = bounding_box.min_corner()
         points_to_keep = []
         point_array = self.plots[i].getPointsAsArray()
         for point in tqdm(point_array, total=len(point_array), desc="Clearing Points"):
@@ -1065,7 +978,7 @@ class PointCloudPlotQt(QWidget):
             self.plots[i].addPoint(point)
         del points_to_keep
 
-    def __on_test_click(self):
+    def __on_simulate_button_click(self):
         w = self.widgets[0]
 
         sim1 = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission1_may_3.csv"
@@ -1093,24 +1006,8 @@ class PointCloudPlotQt(QWidget):
         cb.timer_id = timer_id
         w.GetRenderWindow().GetInteractor().Start()
 
-        # w = self.widgets[0]
-        # # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
-        # planes = [0] * 24
-        # # position = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
-        # # focus = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFocalPoint()
-        # # viewup = [0., 0., 1.]
-        # # w.GetRenderWindow().GetInteractor().GetInteractorStyle().set_camera_orientation(position, focus, viewup)
-        # # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition())
-        # # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetViewUp([0., 1., 0.])
-        # # w.GetRenderWindow().Render()
-        # # w.update()
-        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
-        # # print(planes)
-        # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
-        # temp = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange()
-        # w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.SetClippingRange(temp[0], temp[0])
-        # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ComputeVisiblePropBounds())
-        # w.Render()
+    def __on_test_click(self):
+        pass
 
 
 def create_point_cloud_plot_qt(plots, input_header=None, axes_on=False):

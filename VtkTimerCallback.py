@@ -55,17 +55,9 @@ class VtkTimerCallback:
         except IndexError:
             pass
         self.renderwindow.Render()
-        time.sleep(.48)
+        time.sleep(.1)
         if np.all(np.array(self.iterations) == 0):
-            for i in range(len(self.event_lists)):
-                self.event_numbers[i] = 0
-                for sphere in self.sphere_actors[i]:
-                    self.renderer.RemoveActor(sphere)
-                for arrow in self.arrow_actors[i]:
-                    self.renderer.RemoveActor(arrow)
-                self.sphere_actors[i] = []
-                self.arrow_actors[i] = []
-            iren.DestroyTimer(self.timer_id)
+            self.destroy_sim(obj, event)
 
     def execute_single(self, iren, event, i, tracking, arrows):
         new_pos = np.array([float(i) for i in self.event_lists[i][self.event_numbers[i]][1:4]])
@@ -150,6 +142,18 @@ class VtkTimerCallback:
         self.renderer.AddActor(sphere_actor)
         self.iterations[i] -= 1
         self.event_numbers[i] += 1
+
+    def destroy_sim(self, obj, event):
+        iren = obj
+        for i in range(len(self.event_lists)):
+            self.event_numbers[i] = 0
+            for sphere in self.sphere_actors[i]:
+                self.renderer.RemoveActor(sphere)
+            for arrow in self.arrow_actors[i]:
+                self.renderer.RemoveActor(arrow)
+            self.sphere_actors[i] = []
+            self.arrow_actors[i] = []
+        iren.DestroyTimer(self.timer_id)
 
     def transform(self, old_pos):
         angle = -0.008726  # 0.5 degrees

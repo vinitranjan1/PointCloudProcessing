@@ -28,5 +28,5 @@ class OctreeNode:
         #self.bounding_box_dimensions = bounding_box.get_dimensions()
         self.isLeafNode = True
         self.branches = [None]*8
-        self.lower_corner = bounding_box.min()
-        self.upper_corner = bounding_box.max()
+        self.lower_corner = bounding_box.min_corner()
+        self.upper_corner = bounding_box.max_corner()

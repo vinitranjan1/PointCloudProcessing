@@ -62,7 +62,7 @@ class AxisAlignedBox3D:
         # return self.point1[1] if self.point1[1] > self.point2[1] else self.point2[1]
 
     def max_z(self):
-        return min(self.point1[2], self.point2[2])
+        return max(self.point1[2], self.point2[2])
         # return self.point1[2] if self.point1[2] > self.point2[2] else self.point2[2]
 
     def center_x(self):

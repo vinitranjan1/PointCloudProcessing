@@ -1,5 +1,5 @@
-from tqdm import tqdm, trange
-from VtkPointCloud import VtkPointCloud
+from tqdm import tqdm
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 
 def create_vtkpc_from_array(points):

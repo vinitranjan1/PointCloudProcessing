@@ -1,10 +1,10 @@
 import sys
 from laspy.file import File
-from CreateVTKPCFromArray import create_vtkpc_from_array
-from PointCloudPlotQt import create_point_cloud_plot_qt
+from PlotUtils.CreateVTKPCFromArray import create_vtkpc_from_array
+from PlotUtils.PointCloudPlotQt import create_point_cloud_plot_qt
 from SubsampleFunctions.SubsampleFrac import subsample_frac
 import pdb
-from ReadRawLAS import read_raw_las_data
+from Utils.ReadRawLAS import read_raw_las_data
 
 sys.path.append('../')
 

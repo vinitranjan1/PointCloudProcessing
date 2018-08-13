@@ -1,11 +1,9 @@
 import sys
 sys.path.append('../')
 from Filters.ANNGuidedFilterPrebuiltTree import ann_guided_filter_prebuilt_tree
-from tqdm import tqdm, trange
-from SavePointsAsLAS import save_points_as_las
+from Utils.SavePointsAsLAS import save_points_as_las
 import numpy as np
-from annoy import AnnoyIndex
-from ReadRawLAS import read_raw_las_data
+from Utils.ReadRawLAS import read_raw_las_data
 from laspy.file import File
 import pdb
 

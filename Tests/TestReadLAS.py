@@ -1,11 +1,7 @@
-from laspy.file import File
-import numpy as np
 import vtk
-import time
-import pdb
 from tqdm import tqdm
-from ReadRawLAS import read_raw_las_data
-from VtkPointCloud import VtkPointCloud
+from Utils.ReadRawLAS import read_raw_las_data
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 # input_file = "../MantecaDock/dock.las"
 input_file = "../MantecaDock/fourPallets.las"

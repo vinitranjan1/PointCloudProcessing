@@ -12,7 +12,7 @@ slice_box - AxisAlignedBox3D that gives desired slice points
 Returns:
 points - list containing sliced points
 """
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 from tqdm import tqdm
 
 

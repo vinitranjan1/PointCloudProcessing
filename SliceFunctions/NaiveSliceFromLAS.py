@@ -1,4 +1,4 @@
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 from laspy.file import File
 from tqdm import tqdm
 import numpy as np

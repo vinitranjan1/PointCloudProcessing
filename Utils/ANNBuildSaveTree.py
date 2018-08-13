@@ -1,9 +1,6 @@
-import numpy as np
-import pdb
-from scipy.spatial import kdtree
-from ReadRawLAS import read_raw_las_data
+from Utils.ReadRawLAS import read_raw_las_data
 import time
-from tqdm import tqdm, trange
+from tqdm import trange
 from annoy import AnnoyIndex
 
 

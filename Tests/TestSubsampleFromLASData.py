@@ -1,7 +1,7 @@
 import vtk
 import time
 from SubsampleFunctions.SubsampleFromLASData import subsample_from_las_data
-from VtkPointCloud import VtkPointCloud
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 pointCloud = VtkPointCloud()
 desired_number_points = 350000

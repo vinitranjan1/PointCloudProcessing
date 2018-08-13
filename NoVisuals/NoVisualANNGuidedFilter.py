@@ -1,11 +1,10 @@
 import sys
 sys.path.append('../')
 from Filters.ANNGuidedFilter import ann_guided_filter
-from tqdm import tqdm, trange
+from tqdm import trange
 import numpy as np
-from ReadRawLAS import read_raw_las_data
+from Utils.ReadRawLAS import read_raw_las_data
 from laspy.file import File
-import pdb
 
 input1 = "../MantecaDock/fourPallets.las"
 output1 = "../Output/temp.las"

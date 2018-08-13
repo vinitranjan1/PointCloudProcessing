@@ -10,8 +10,8 @@ https://www.gamedev.net/articles/programming/general-and-gameplay-programming/in
 """
 import numpy as np
 import copy
-from AxisAlignedBox3D import AxisAlignedBox3D
-from OctreeNode import OctreeNode
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.OctreeNode import OctreeNode
 
 
 class Octree:

@@ -1,7 +1,7 @@
 import numpy as np
 import time
-from Octree import Octree
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.Octree import Octree
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 
 
 class TestObject:

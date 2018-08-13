@@ -14,7 +14,7 @@ points - list containing sliced points
 """
 import csv
 import numpy as np
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 
 
 def naive_slice_from_data(filename, slice_box=AxisAlignedBox3D()):

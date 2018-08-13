@@ -3,9 +3,9 @@ sys.path.append("../")
 from Filters.ANNGuidedFilter import ann_guided_filter
 from Filters.ANNRadialFilter import ann_radial_filter
 from Filters.RoundingFilter import rounding_filter
-from WriteToConfig import write_to_config
-from ReadRawLAS import read_raw_las_data
-from SavePointsAsLAS import save_points_as_las
+from Utils.WriteToConfig import write_to_config
+from Utils.ReadRawLAS import read_raw_las_data
+from Utils.SavePointsAsLAS import save_points_as_las
 from laspy.file import File
 
 room2 = "../MantecaRoom2/room2.las"

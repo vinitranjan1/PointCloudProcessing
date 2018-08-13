@@ -1,8 +1,8 @@
 import sys
 from laspy.file import File
 from tqdm import tqdm, trange
-from CreateVTKPCFromArray import create_vtkpc_from_array
-from PointCloudPlotQt import create_point_cloud_plot_qt
+from PlotUtils.CreateVTKPCFromArray import create_vtkpc_from_array
+from PlotUtils.PointCloudPlotQt import create_point_cloud_plot_qt
 from SubsampleFunctions.SubsampleFracFromLAS import subsample_frac_from_las_data
 import time
 import numpy as np

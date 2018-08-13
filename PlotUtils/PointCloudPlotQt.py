@@ -15,9 +15,9 @@ import time
 from laspy.file import File
 from laspy.header import Header
 from laspy.util import LaspyException
-from AxisAlignedBox3D import AxisAlignedBox3D
-from CustomInteractorStyle import CustomInteractorStyle
-from VtkTimerCallback import VtkTimerCallback
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
+from PlotUtils.CustomInteractorStyle import CustomInteractorStyle
+from PlotUtils.VtkTimerCallback import VtkTimerCallback
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QMessageBox, QSlider
 from PyQt5 import Qt

@@ -1,11 +1,11 @@
 from laspy.file import File
 from tqdm import tqdm
-from PointCloudPlotQt import create_point_cloud_plot_qt
+from PlotUtils.PointCloudPlotQt import create_point_cloud_plot_qt
 from Filters.ANNGuidedFilter import ann_guided_filter
 import pdb
 import numpy as np
-from ReadRawLAS import read_raw_las_data
-from VtkPointCloud import VtkPointCloud
+from Utils.ReadRawLAS import read_raw_las_data
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 # input_file = "../MantecaDock/dock.las"
 # x = [1, 2, 3, 4, 6]

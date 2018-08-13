@@ -1,8 +1,8 @@
 import vtk
 from tqdm import tqdm
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 from SliceFunctions.NaiveSliceFromLAS import naive_slice_from_las
-from VtkPointCloud import VtkPointCloud
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 input_file = "../MantecaRoom1/rack.las"
 out_file = "../MantecaDock/smallArea.las"

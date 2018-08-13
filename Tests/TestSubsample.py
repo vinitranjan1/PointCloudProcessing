@@ -5,7 +5,7 @@ import vtk
 from vtk.util import numpy_support
 import csv
 import numpy as np
-from VtkPointCloud import VtkPointCloud
+from PlotUtils.VtkPointCloud import VtkPointCloud
 from SubsampleFunctions.Subsample import subsample
 
 pointCloud = VtkPointCloud()

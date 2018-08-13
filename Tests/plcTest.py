@@ -2,7 +2,7 @@ import vtk
 import csv
 import numpy as np
 import time
-from VtkPointCloud import VtkPointCloud
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 pointCloud = VtkPointCloud()
 

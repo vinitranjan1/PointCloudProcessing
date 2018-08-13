@@ -8,7 +8,7 @@ A class for the nodes to be put into an Octree
 https://github.com/jcummings2/pyoctree/blob/master/octree.py
 https://www.gamedev.net/articles/programming/general-and-gameplay-programming/introduction-to-octrees-r3529/
 """
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 
 
 class OctreeNode:

@@ -1,8 +1,8 @@
 from laspy.file import File
 import numpy as np
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 from SliceFunctions.NaiveSliceFromLAS import naive_slice_from_las
-from VtkPointCloud import VtkPointCloud
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 input_file = "../MantecaDock/dock.las"
 output_file = "../MantecaDock/fourPallets.las"

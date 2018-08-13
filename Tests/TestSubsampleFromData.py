@@ -1,7 +1,7 @@
 import vtk
 
 from TextFunctions.SubsampleFromTextData import subsample_from_data
-from VtkPointCloud import VtkPointCloud
+from PlotUtils.VtkPointCloud import VtkPointCloud
 
 pointCloud = VtkPointCloud()
 desired_number_points = 10000

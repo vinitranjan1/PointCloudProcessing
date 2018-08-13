@@ -1,10 +1,10 @@
 import sys
 from laspy.file import File
-from CreateVTKPCFromArray import create_vtkpc_from_array
-from PointCloudPlotQt import create_point_cloud_plot_qt
+from PlotUtils.CreateVTKPCFromArray import create_vtkpc_from_array
+from PlotUtils.PointCloudPlotQt import create_point_cloud_plot_qt
 from Filters.ANNGuidedFilter import ann_guided_filter
 from SliceFunctions.NaiveSliceFromLAS import naive_slice_from_las
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 import pdb
 
 sys.path.append('../')

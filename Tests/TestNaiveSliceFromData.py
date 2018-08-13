@@ -1,10 +1,10 @@
 from laspy.file import File
 from tqdm import tqdm
-from AxisAlignedBox3D import AxisAlignedBox3D
+from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 from SliceFunctions.NaiveSlice import naive_slice
-from ReadRawLAS import read_raw_las_data
-from VtkPointCloud import VtkPointCloud
-from PointCloudPlotQt import create_point_cloud_plot_qt
+from Utils.ReadRawLAS import read_raw_las_data
+from PlotUtils.VtkPointCloud import VtkPointCloud
+from PlotUtils.PointCloudPlotQt import create_point_cloud_plot_qt
 
 input_file = "../MantecaRoom1/room1.las"
 # out_file = "../MantecaDock/smallArea.las"

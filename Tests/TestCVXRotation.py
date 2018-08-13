@@ -3,18 +3,11 @@ from laspy.file import File
 from tqdm import tqdm, trange
 from CreateVTKPCFromArray import create_vtkpc_from_array
 from PointCloudPlotQt import create_point_cloud_plot_qt
-from SubsampleFromLASData import subsample_from_las_data
-from SubsampleFracFromLAS import subsample_frac_from_las_data
-from NaiveSlice import naive_slice
-from NaiveSliceFromLAS import naive_slice_from_las
-from AxisAlignedBox3D import AxisAlignedBox3D
-import pdb
+from SubsampleFunctions.SubsampleFracFromLAS import subsample_frac_from_las_data
 import time
 import numpy as np
 import cvxpy as cp
-from ReadRawLAS import read_raw_las_data
-from VtkPointCloud import VtkPointCloud
-import h5py
+
 sys.path.append('../')
 
 input1 = "../MantecaRoom1/room1slice.las"

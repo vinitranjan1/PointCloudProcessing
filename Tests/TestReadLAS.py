@@ -5,7 +5,6 @@ import time
 import pdb
 from tqdm import tqdm
 from ReadRawLAS import read_raw_las_data
-from ScalePoint import scale_point
 from VtkPointCloud import VtkPointCloud
 
 # input_file = "../MantecaDock/dock.las"

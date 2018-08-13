@@ -2,7 +2,10 @@ import numpy as np
 import pdb
 from laspy.file import File
 from tqdm import tqdm, trange
-from ScalePoint import scale_point
+
+
+def scale_point(point, scale_factor, offset):
+    return (point * scale_factor) + offset
 
 
 def read_raw_las_data(filename):

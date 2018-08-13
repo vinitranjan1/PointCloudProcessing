@@ -1,5 +1,4 @@
 import vtk
-from vtk.util import numpy_support
 import sys
 import os
 import cv2
@@ -9,7 +8,7 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
-from SubsampleFrac import subsample_frac
+from SubsampleFunctions.SubsampleFrac import subsample_frac
 from Filters.ThresholdFilter import threshold_filter
 from tqdm import tqdm, trange
 import time
@@ -21,7 +20,7 @@ from CustomInteractorStyle import CustomInteractorStyle
 from VtkTimerCallback import VtkTimerCallback
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QInputDialog, QMessageBox, QSlider
-from PyQt5 import Qt, QtCore, QtGui
+from PyQt5 import Qt
 
 
 class PointCloudPlotQt(QWidget):

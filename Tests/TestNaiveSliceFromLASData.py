@@ -1,16 +1,8 @@
-import time
-from laspy.file import File
 import vtk
-import numpy as np
 from tqdm import tqdm
 from AxisAlignedBox3D import AxisAlignedBox3D
-from NaiveSliceFromLAS import naive_slice_from_las
-from NaiveSlice import naive_slice
-from SubsampleFromLASData import subsample_from_las_data
-from ReadRawLAS import read_raw_las_data
+from SliceFunctions.NaiveSliceFromLAS import naive_slice_from_las
 from VtkPointCloud import VtkPointCloud
-from PointCloudPlotQt import create_point_cloud_plot_qt
-import pdb
 
 input_file = "../MantecaRoom1/rack.las"
 out_file = "../MantecaDock/smallArea.las"

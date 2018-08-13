@@ -1,7 +1,7 @@
 import vtk
 import time
 import pdb
-from SubsampleFromLASData import subsample_from_las_data
+from SubsampleFunctions.SubsampleFromLASData import subsample_from_las_data
 from VtkPointCloud import VtkPointCloud
 
 pointCloud = VtkPointCloud()

@@ -6,7 +6,7 @@ from vtk.util import numpy_support
 import csv
 import numpy as np
 from VtkPointCloud import VtkPointCloud
-from Subsample import subsample
+from SubsampleFunctions.Subsample import subsample
 
 pointCloud = VtkPointCloud()
 desired_number_points = 10000

@@ -1,27 +1,12 @@
 import sys
 from laspy.file import File
-from tqdm import tqdm, trange
 from CreateVTKPCFromArray import create_vtkpc_from_array
 from PointCloudPlotQt import create_point_cloud_plot_qt
-from SubsampleFromLASData import subsample_from_las_data
-from SubsampleFracFromLAS import subsample_frac_from_las_data
-from Filters.RadiusOutlierFilter import radius_outlier_filter
 from Filters.ANNGuidedFilter import ann_guided_filter
-from Filters.ANNGuidedFilterPrebuiltTree import ann_guided_filter_prebuilt_tree
-from Filters.ANNGuidedFilterMultiEps import ann_guided_filter_multi_eps
-from Filters.ANNRadialMultiStdev import ann_radial_filter_multi_stdev
-from Filters.GuidedFilterkNN import guided_filter_kNN
-from Filters.ANNRadialFilter import ann_radial_filter
-from Filters.RoundingFilter import rounding_filter
-from Filters.ThresholdFilter import threshold_filter
-from NaiveSlice import naive_slice
-from NaiveSliceFromLAS import naive_slice_from_las
+from SliceFunctions.NaiveSliceFromLAS import naive_slice_from_las
 from AxisAlignedBox3D import AxisAlignedBox3D
-from SavePointsAsLAS import save_points_as_las
 import pdb
-from ReadRawLAS import read_raw_las_data
-from VtkPointCloud import VtkPointCloud
-import h5py
+
 sys.path.append('../')
 
 # input1 = "../MantecaFiltered/room1FS.laz"

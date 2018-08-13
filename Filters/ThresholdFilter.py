@@ -3,14 +3,14 @@ from tqdm import tqdm, trange
 import pdb
 
 
-def threshold_filter(input_cloud, dim_to_collapse="Z", mesh=0.05, threshold=.25):
+def threshold_filter(input_list, dim_to_collapse="Z", mesh=0.05, threshold=.25):
     output_cloud = []
-    hist, xedges, yedges = __collapse_one_dim(input_cloud, dim_to_collapse, mesh)
+    hist, xedges, yedges = __collapse_one_dim(input_list, dim_to_collapse, mesh)
     max_value = max([max(i) for i in hist])
     cutoff = int(threshold * max_value)
     mask = (hist >= cutoff)
 
-    for p in tqdm(input_cloud, total=len(input_cloud), desc="Filtering"):
+    for p in tqdm(input_list, total=len(input_list), desc="Filtering"):
         try:
             x_coord = binary_search(xedges, 0, len(xedges) - 1, p[0])
             y_coord = binary_search(yedges, 0, len(yedges) - 1, p[1])

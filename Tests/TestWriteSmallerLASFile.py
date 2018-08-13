@@ -1,13 +1,8 @@
-import time
 from laspy.file import File
-from laspy.util import Point
-import vtk
 import numpy as np
-from tqdm import tqdm
 from AxisAlignedBox3D import AxisAlignedBox3D
-from NaiveSliceFromLAS import naive_slice_from_las
+from SliceFunctions.NaiveSliceFromLAS import naive_slice_from_las
 from VtkPointCloud import VtkPointCloud
-import pdb
 
 input_file = "../MantecaDock/dock.las"
 output_file = "../MantecaDock/fourPallets.las"

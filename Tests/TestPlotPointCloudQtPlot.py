@@ -36,11 +36,13 @@ sys.path.append('../')
 # input1 = "../MantecaFiltered/raildockFS.laz"
 # input1 = "../MantecaFiltered/room1FS.laz"
 # input1 = "../MantecaFiltered/MantecaSlice.las"
-input1 = "../MantecaFiltered/MantecaRailSlice.las"
-input2 = "../MantecaFiltered/Manteca.las"
+# input1 = "../MantecaFiltered/MantecaRailSlice.las"
+# input2 = "../MantecaFiltered/Manteca.las"
 # input1 = "../MantecaFiltered/engineRoomFS.laz"
 # input2 = "../MantecaCompressorRoom/compressorRoom.las"
-# input1 = "../MantecaFiltered/room4F.laz"
+# input1 = "../MantecaRoom5/room5.las"
+# input2 = "../MantecaFiltered/room5FS.laz"
+input1 = "../MantecaRailDock/raildock.laz"
 # input1 = "../MantecaFiltered/room5F.las"
 # input1 = "../MantecaFiltered/room6F.las"
 # input1 = "../MantecaFiltered/dockF.las"
@@ -62,12 +64,23 @@ with File(input1, mode='r') as f:
     # pc2 = create_vtkpc_from_array(points2)
     # to_plot.append(pc2)
 
-    points = read_raw_las_data(input1)
-    warehouse = subsample_frac_from_las_data(input2, .1)
+    # points = read_raw_las_data(input1)
+    # warehouse = subsample_frac_from_las_data(input2, .1)
+    #
+    # # points = subsample_frac_from_las_data(input1, .01)
+    # pc = create_vtkpc_from_array(points+warehouse)
+    # to_plot.append(pc)
 
+    points = naive_slice_from_las(input1, AxisAlignedBox3D([7, -13, -.5], [9, -11, 3]))
     # points = subsample_frac_from_las_data(input1, .01)
-    pc = create_vtkpc_from_array(points+warehouse)
+    points = ann_guided_filter(points, num_neighbors=50, filter_eps=.07)
+    # points = subsample_frac_from_las_data(input1, .1)
+    pc = create_vtkpc_from_array(points)
     to_plot.append(pc)
+
+    # points2 = threshold_filter(points, threshold=.01)
+    # pc2 = create_vtkpc_from_array(points2)
+    # to_plot.append(pc2)
 
     # points2 = read_raw_las_data(input2)
     # pc2 = create_vtkpc_from_array(points2)

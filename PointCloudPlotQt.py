@@ -103,9 +103,6 @@ class PointCloudPlotQt(QWidget):
         ren.AddActor(plot.vtkActor)
         self.widget_point_actors.append(plot.vtkActor)
         rw.AddRenderer(ren)
-        # print(i/num)
-        # print((i+1)/num)
-
         ren.SetBackground(self.background)
 
         camera = ren.GetActiveCamera()
@@ -304,14 +301,16 @@ class PointCloudPlotQt(QWidget):
                 to_save = self.widgets[int(prompt[0])]
                 filename = QInputDialog.getText(self, "File Path From LineageProject:", "Name")
                 # assume this is from the test folder, TODO figure out better way
-                path = os.path.join(os.path.realpath('..'), filename[0])
+                # path = os.path.join(os.path.realpath('..'), filename[0])
+                path = filename[0]
                 if not path.endswith(".las"):
                     path += ".las"
                 if os.path.exists(path):
                     print("Overwriting")
                 if self.las_header is None:
                     file_for_header = QInputDialog.getText(self, "Path for Las Header:", "Name")
-                    path_for_header = os.path.join(os.path.realpath('..'), file_for_header[0])
+                    # path_for_header = os.path.join(os.path.realpath('..'), file_for_header[0])
+                    path_for_header = file_for_header[0]
                     try:
                         header_file = File(path_for_header, mode='r')
                         temp_las_header = header_file.header
@@ -417,16 +416,6 @@ class PointCloudPlotQt(QWidget):
         start = time.time()
         if uniform_collapse:
             hist, xedges, yedges = np.histogram2d(arr1, arr2, bins=(xbins, ybins))
-            # weights = []
-            # for i in hist:
-            #     new_array = []
-            #     for j in i:
-            #         new_array.append(1) if j > 0 else new_array.append(0)
-            #     weights.append(new_array)
-            # weights = np.array(weights)
-            # print(weights.shape)
-            # assert len(hist) == len(weights)
-            # assert len(hist[0]) == len(weights[0])
             cutoff = 0
             default_weight = 1.
             weights = []
@@ -446,7 +435,7 @@ class PointCloudPlotQt(QWidget):
             plt.show()
         else:
             print("Finding histogram")
-            plt.hist2d(arr1, arr2, (xbins, ybins), cmap=plt.cm.jet, norm=colors.LogNorm())
+            plt.hist2d(arr1, arr2, bins=(xbins, ybins), cmap=plt.cm.jet, norm=colors.LogNorm())
             end = time.time() - start
             print("Finding histogram took %.2f seconds" % end)
             plt.show()

@@ -61,7 +61,10 @@ def ann_guided_filter(input_cloud, num_neighbors=40, filter_eps=.05, dim=3, conf
         # step 5
         b = p_bar - a*p_bar
         # step 6
-        output_cloud.append(a*input_cloud[i]+b)
+        try:
+            output_cloud.append(a * input_cloud[i] + b)
+        except TypeError:
+            output_cloud.append(a * np.array(input_cloud[i]) + b)
     if config_file is not None:
         return output_cloud, {"num_neighbors": num_neighbors, "filter_eps": filter_eps, "dim": dim}
     return output_cloud

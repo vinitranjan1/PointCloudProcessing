@@ -18,8 +18,8 @@ from tqdm import tqdm
 
 def naive_slice(data, slice_box=AxisAlignedBox3D()):
     points = []
-    lower_corner = slice_box.min()
-    upper_corner = slice_box.max()
+    lower_corner = slice_box.min_corner()
+    upper_corner = slice_box.max_corner()
     for datum in tqdm(data, total=len(data), desc="Slicing"):
         if lower_corner[0] <= datum[0] <= upper_corner[0] and lower_corner[1] <= datum[1]\
                 <= upper_corner[1] and lower_corner[2] <= datum[2] <= upper_corner[2]:

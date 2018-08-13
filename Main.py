@@ -10,7 +10,7 @@ def main():
         input_header = f.header
         to_plot = []  # list of VTK Point Clouds to plot
 
-        points = subsample_frac_from_las_data(input1, .1)
+        points = subsample_frac_from_las_data(input1, .01)
         pc = create_vtkpc_from_array(points)
         to_plot.append(pc)
 

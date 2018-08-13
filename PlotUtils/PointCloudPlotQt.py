@@ -38,12 +38,6 @@ class PointCloudPlotQt(QWidget):
         self.frame = Qt.QFrame()
         self.hl = Qt.QHBoxLayout()
         self.bl = Qt.QVBoxLayout()
-        # self.cull_state_machine = QtCore.QStateMachine()
-        self.cull_planes_on = False
-        self.default_cull_planes = []
-        self.default_cull_plane_distances = []
-        self.default_cull_planes_bounds = []
-        self.culling_slider = None
 
         self.widgets = []
         self.widget_defaults = []
@@ -81,7 +75,6 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Keep Points Inside Box", self.__on_keep_points_inside_box_click)
         self.add_button("Keep Points Outside Box", self.__on_keep_points_outside_box_click)
         # self.add_statemachine(self.cull_state_machine,"State", "Off", "On")
-        self.add_button("Cull Planes Toggle", self.__on_cull_planes_toggle)
         self.add_button("Simulate", self.__on_simulate_button_click)
         self.add_button("Test", self.__on_test_click)
         # self.hl.addWidget(self.culling_slider)
@@ -109,14 +102,14 @@ class PointCloudPlotQt(QWidget):
         orientation = camera.GetOrientation()
         corner.SetText(0, "(x, y, z) = (%.3f, %.3f, %.3f)" % (orientation[0], orientation[1], orientation[2]))
         ren.AddActor(corner)
+        i = self.widgets.index(widget)
+        axes = self.axes_actors[i]
+        axes.SetInputConnection(self.plots[i].outline.GetOutputPort())
+        axes.SetCamera(camera)
+        axes.SetLabelFormat("%6.4g")
+        axes.SetFlyModeToOuterEdges()
+        axes.SetFontFactor(1.2)
         if self.axes_on:
-            i = self.widgets.index(widget)
-            axes = self.axes_actors[i]
-            axes.SetInputConnection(self.plots[i].outline.GetOutputPort())
-            axes.SetCamera(camera)
-            axes.SetLabelFormat("%6.4g")
-            axes.SetFlyModeToOuterEdges()
-            axes.SetFontFactor(1.2)
             ren.AddViewProp(axes)
 
         ren.ResetCamera()
@@ -133,37 +126,6 @@ class PointCloudPlotQt(QWidget):
         self.bl.addWidget(button)
         button.show()
 
-    def __on_cull_planes_toggle(self):
-        # print(states)
-        self.cull_planes_on = not self.cull_planes_on
-        # print(self.cull_planes_on)
-        if self.cull_planes_on:
-            self.__add_culling_slider()
-        else:
-            self.__reset_remove_culling_slider()
-
-    def __distance_between_planes(self, far_plane, near_plane):
-        # assume planes are in form [A, B, C, D] where plane equation is Ax + By + Cz + D = 0
-        far_plane = np.array(far_plane)
-        near_plane = np.array(near_plane)
-        if not far_plane[2] == 0:
-            point_on_far = np.array([0., 0., -far_plane[3] / far_plane[2]])
-        elif not far_plane[1] == 0:
-            point_on_far = np.array([0., -far_plane[3] / far_plane[1], 0.])
-        else:
-            point_on_far = np.array([-far_plane[3] / far_plane[1], 0., 0.])
-
-        if not near_plane[2] == 0:
-            point_on_near = np.array([0., 0., -near_plane[3] / near_plane[2]])
-        elif not near_plane[1] == 0:
-            point_on_near = np.array([0., -near_plane[3] / near_plane[1], 0.])
-        else:
-            point_on_near = np.array([-near_plane[3] / near_plane[0], 0., 0.])
-
-        normal_vector = np.array(far_plane[:3])
-        vector_between_planes = point_on_far - point_on_near
-        return abs(np.dot(vector_between_planes, normal_vector) / np.linalg.norm(normal_vector))
-
     @staticmethod
     def __binary_search(arr, left, right, x):
         while left <= right:
@@ -174,91 +136,21 @@ class PointCloudPlotQt(QWidget):
                 right = mid - 1
         return left-1
 
-    def __add_culling_slider(self):
-        # w = self.widgets[0]
-        for w in self.widgets:
-            planes = [0] * 24
-            w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
-            self.default_cull_planes.append(planes)
-        for i in range(len(self.widgets)):
-            w = self.widgets[i]
-            planes = [0] * 24
-            w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
-            far_plane = planes[16:20]
-            near_plane = planes[20:]
-            # print(far_plane)
-            # print(near_plane)
-            self.default_cull_plane_distances.append(self.__distance_between_planes(far_plane, near_plane))
-            # print(abs(dist_between_planes))
-            vtkplanes = vtk.vtkPlanes()
-            vtkplanes.SetFrustumPlanes(planes)
-            frustum_source = vtk.vtkFrustumSource()
-            frustum_source.SetPlanes(vtkplanes)
-            frustum_source.Update()
-            # self.plots[i].mapper.SetInputConnection(testsource.GetOutputPort())
-            self.plots[i].frustumMapper.SetInputData(frustum_source.GetOutput())
-            actor = vtk.vtkActor()
-            actor.SetMapper(self.plots[i].frustumMapper)
-            actor.GetProperty().SetOpacity(0)
-            self.default_cull_planes_bounds.append(w.GetRenderWindow().GetInteractor().
-                                                   GetInteractorStyle().ren.ComputeVisiblePropBounds())
-            # w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.AddActor(actor)
-            w.GetRenderWindow().Render()
-            # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
-            # self.plots[i].mapper.SetInputData
-
-        self.culling_slider = QSlider()
-        self.culling_slider.setMinimum(0)
-        self.culling_slider.setMaximum(100)
-        self.culling_slider.setValue(100)
-        self.culling_slider.setTickInterval(1)
-        self.culling_slider.setTracking(True)
-        self.culling_slider.valueChanged.connect(self.__culling_slider_move)
-        self.culling_slider.show()
-        self.hl.addWidget(self.culling_slider)
-
-    def __culling_slider_move(self):
-        # self.culling_slider.setValue(50)
-        self.culling_slider.hide()  # slider wasn't updating, this is a really hacky solution
-        self.culling_slider.show()
-        for i in range(len(self.widgets)):
-            w = self.widgets[i]
-            planes = [0] * 24
-            w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFrustumPlanes(1, planes)
-            max_distance = self.default_cull_plane_distances[i]
-            far_plane = planes[16:20]
-            near_plane = planes[20:]
-            z_diff = self.default_cull_planes_bounds[i][5] - self.default_cull_planes_bounds[i][4]
-            new_z = self.default_cull_planes_bounds[i][4] + z_diff * self.culling_slider.value() / 100.
-            new_bounds = self.default_cull_planes_bounds[i] + tuple()
-            new_bounds = np.array(new_bounds)
-            new_bounds[5] = new_z
-            # w.GetRenderWindow().GetInteractor().GetInteractorStyle().\
-            #     ren.ComputeVisiblePropBounds(new_bounds)
-            # print(new_bounds)
-            w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCameraClippingRange(new_bounds)
-            # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetClippingRange())
-            w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCamera(new_bounds)
-            w.update()
-            w.Render()
-            # print(far_plane)
-            # print(near_plane)
-            #
-            # print(self.default_cull_plane_distances[i])
-        # print(self.culling_slider.value())
-
-        # print("moved")
-
-    def __reset_remove_culling_slider(self):
-        self.culling_slider.setValue(100)
-        self.hl.removeWidget(self.culling_slider)
-        self.culling_slider.hide()
-
     def __on_toggle_axes_click(self):
-        for i in range(len(self.axes_actors)):
-            # self.axes_actors[i].SetTotalLength(100, 100, 100)
-            self.widgets[i].Render()
-            self.widgets[i].GetRenderWindow().Render()
+        if self.axes_on:
+            for i in range(len(self.axes_actors)):
+                w = self.widgets[i]
+                w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.RemoveViewProp(self.axes_actors[i])
+                w.Render()
+                w.GetRenderWindow().Render()
+            self.axes_on = False
+        else:
+            for i in range(len(self.axes_actors)):
+                w = self.widgets[i]
+                w.GetRenderWindow().GetInteractor().GetInteractorStyle().ren.AddViewProp(self.axes_actors[i])
+                w.Render()
+                w.GetRenderWindow().Render()
+            self.axes_on = True
 
     def __on_snap_button_click(self):
         first_plot = self.widgets[0]
@@ -477,7 +369,7 @@ class PointCloudPlotQt(QWidget):
         plt.show()
 
     def __on_translate_rotate_xy_button_click(self):
-        prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
+        prompt = QInputDialog.getInt(self, "Plot index to translate/rotate", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
             try:
@@ -559,7 +451,7 @@ class PointCloudPlotQt(QWidget):
         self.__translate_rotate_xy_helper(corner_float0, corner_float1, corner_float2, corner_float3)
 
     def __on_shift_vector_click(self):
-        prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
+        prompt = QInputDialog.getInt(self, "Plot index to shift", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
             try:
@@ -969,9 +861,9 @@ class PointCloudPlotQt(QWidget):
     def __on_simulate_button_click(self):
         w = self.widgets[0]
 
-        sim1 = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission1_may_3.csv"
-        sim2 = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission1.csv"
-        sim3 = "/Users/Vinit/PycharmProjects/LineageProject/Simulation/pose_log_mission2.csv"
+        sim1 = "Simulation/pose_log_mission1_may_3.csv"
+        sim2 = "Simulation/pose_log_mission1.csv"
+        sim3 = "Simulation/pose_log_mission2.csv"
         sims = [sim1, sim2, sim3]
 
         event_lists = []

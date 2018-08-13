@@ -1,6 +1,6 @@
 import vtk
 
-from TextFunctions.SubsampleFromTextData import subsample_from_data
+from Utils.TextFunctions.SubsampleFromTextData import subsample_from_data
 from PlotUtils.VtkPointCloud import VtkPointCloud
 
 pointCloud = VtkPointCloud()

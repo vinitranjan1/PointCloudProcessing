@@ -987,8 +987,8 @@ class PointCloudPlotQt(QWidget):
                               event_lists=event_lists, iterations=[len(e) for e in event_lists])
 
         w.GetRenderWindow().GetInteractor().AddObserver('TimerEvent', lambda obj, event:
-                                                        cb.execute(obj, event, tracking=False,
-                                                                   arrows=True, camera_track=-1))
+                                                        cb.execute(obj, event, tracking=True,
+                                                                   arrows=False, camera_track=-1))
 
         timer_id = w.GetRenderWindow().GetInteractor().CreateRepeatingTimer(100)
         cb.timer_id = timer_id

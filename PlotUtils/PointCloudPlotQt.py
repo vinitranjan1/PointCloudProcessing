@@ -58,10 +58,18 @@ class PointCloudPlotQt(QWidget):
                 self.widget_defaults.append((position, focus, viewup))
 
         self.hl.addLayout(self.bl)
+        self.add_buttons()
+        self.frame.setLayout(self.hl)
+        self.main.setCentralWidget(self.frame)
+        self.main.show()
+        for w in self.widgets:
+            w.GetRenderWindow().GetInteractor().Initialize()
+            w.GetRenderWindow().GetInteractor().Start()
+        # sys.exit(self.app.exec_())
+
+    def add_buttons(self):
         self.add_button("Toggle Axes", self.__on_toggle_axes_click)
         self.add_button("Snap To First", self.__on_snap_button_click)
-        # self.add_button("Translate to Origin", self.__on_translate_to_origin_button_click)
-        # self.add_button("Rotate", self.__on_rotate_button_click)
         self.add_button("GoTo Default View", self.__on_default_view_button)
         self.add_button("Set New Default View", self.__on_set_default_view_button)
         self.add_button("Save Plot", self.__on_save_button_click)
@@ -74,17 +82,8 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Auto Rotate", self.__on_auto_rotate_button_click)
         self.add_button("Keep Points Inside Box", self.__on_keep_points_inside_box_click)
         self.add_button("Keep Points Outside Box", self.__on_keep_points_outside_box_click)
-        # self.add_statemachine(self.cull_state_machine,"State", "Off", "On")
         self.add_button("Simulate", self.__on_simulate_button_click)
         self.add_button("Test", self.__on_test_click)
-        # self.hl.addWidget(self.culling_slider)
-        self.frame.setLayout(self.hl)
-        self.main.setCentralWidget(self.frame)
-        self.main.show()
-        for w in self.widgets:
-            w.GetRenderWindow().GetInteractor().Initialize()
-            w.GetRenderWindow().GetInteractor().Start()
-        # sys.exit(self.app.exec_())
 
     def plot_point_cloud_qt(self, plot, widget):
         rw = widget.GetRenderWindow()

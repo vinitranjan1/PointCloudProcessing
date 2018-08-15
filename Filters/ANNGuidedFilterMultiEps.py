@@ -7,12 +7,6 @@ from annoy import AnnoyIndex
 
 
 def ann_guided_filter_multi_eps(input_cloud, neighbors=40, eps_list=[.05, 1.0], dim=3):
-    # print("Constructing kdtree")
-    # tree = kdtree.KDTree(input_cloud)
-    # other_tree = kdtree.KDTree(input_cloud)
-    # print("kdtree constructed")
-    # print("finding neighbors")
-
     num = len(input_cloud)
     tree = AnnoyIndex(dim, metric='euclidean')
     for k in trange(num, desc="Preparing for ANN"):
@@ -25,10 +19,6 @@ def ann_guided_filter_multi_eps(input_cloud, neighbors=40, eps_list=[.05, 1.0], 
     print("Building %d trees took %d seconds" % (num_trees, end))
 
     neighbor_list = []
-    # start = time.time()
-    # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
-    # end = time.time() - start
-    # print("Finding neighbors took %s seconds" % end)
     for k in trange(num, desc="Doing ANN"):
         neighbor_list.append(tree.get_nns_by_item(k, neighbors))
 

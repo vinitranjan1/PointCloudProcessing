@@ -11,6 +11,7 @@ from matplotlib import colors
 from SubsampleFunctions.SubsampleFrac import subsample_frac
 from Filters.ThresholdFilter import threshold_filter
 from tqdm import tqdm, trange
+from BaseProjectDirectory import base_project_dir
 import time
 from laspy.file import File
 from laspy.header import Header
@@ -189,9 +190,11 @@ class PointCloudPlotQt(QWidget):
         if prompt[1]:
             try:
                 to_save = self.widgets[int(prompt[0])]
-                filename = QInputDialog.getText(self, "File Path From LineageProject:", "Name")
+                filename = QInputDialog.getText(self, "File Path From LineageProject:", base_project_dir)
                 # assume this is from the test folder, TODO figure out better way
                 # path = os.path.join(os.path.realpath('..'), filename[0])
+                if not filename[1]:
+                    return
                 path = filename[0]
                 if not path.endswith(".las"):
                     path += ".las"
@@ -351,7 +354,7 @@ class PointCloudPlotQt(QWidget):
             p = points.GetPoint(k)
             arr.append(p[dims[0]])
 
-        pdb.set_trace()
+        # pdb.set_trace()
         print("Plotting")
         plt.clf()
         # plt.axis('equal')

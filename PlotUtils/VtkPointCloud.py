@@ -1,3 +1,16 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+A class to take an array of points and create point clouds that VTK can handle
+Note that the initialization of a VTKPointCloud does not handle being initialized with points, we need to set up
+    the VTK objects first, and THEN we can add points
+Refer to CreateVTKPCFromArray.py to see the usage
+
+Inputs:
+zMin/zMax - the min/max z-values, only used for coloring purposes to calculate a z-gradient
+    (i.e. zMin is red and zMax is blue with a gradient in between)
+"""
 import vtk
 from tqdm import tqdm, trange
 from numpy import random
@@ -6,8 +19,7 @@ import random
 
 class VtkPointCloud:
 
-    def __init__(self, zMin=-1, zMax=13, maxNumPoints=1e10):
-        self.maxNumPoints = maxNumPoints
+    def __init__(self, zMin=-1, zMax=13):
         self.vtkPolyData = vtk.vtkPolyData()
         self.clearPoints()
         self.mapper = vtk.vtkPolyDataMapper()
@@ -15,8 +27,6 @@ class VtkPointCloud:
         self.mapper.SetColorModeToDefault()
         self.mapper.SetScalarRange(zMin, zMax)
         self.mapper.SetScalarVisibility(1)
-
-        self.frustumMapper = vtk.vtkPolyDataMapper()
 
         # For bounding box outline
         self.vtkActor = vtk.vtkActor()
@@ -31,14 +41,11 @@ class VtkPointCloud:
         self.outlineActor.GetProperty().SetColor(0, 0, 0)
 
     def addPoint(self, point):
-        # if self.vtkPoints.GetNumberOfPoints() < self.maxNumPoints:
         pointId = self.vtkPoints.InsertNextPoint(point[:])
         self.vtkDepth.InsertNextValue(point[2])
         self.vtkCells.InsertNextCell(1)
         self.vtkCells.InsertCellPoint(pointId)
-        # else:
-        #     r = random.randint(0, self.maxNumPoints)
-        #     self.vtkPoints.SetPoint(r, point[:])
+
         self.vtkCells.Modified()
         self.vtkPoints.Modified()
         self.vtkDepth.Modified()

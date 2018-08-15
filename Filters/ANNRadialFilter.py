@@ -34,39 +34,30 @@ def get_neighbor_length(k, num_neighbors, search_k_num, tree, r):
             return len(ann[:cutoff])
 
 
-def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, metric='euclidean', config_file=None):
+def ann_radial_filter(input_cloud, r=.1, sd_cutoff=1, metric='euclidean', dim=3, tree_file=None, config_file=None):
     output_cloud = []
-    # print("Constructing kdtree")
-    # tree = kdtree.KDTree(input_cloud)
-    # other_tree = kdtree.KDTree(input_cloud)
-    # print("kdtree constructed")
-    # print("finding neighbors")
 
     num = len(input_cloud)
-    tree = AnnoyIndex(3, metric=metric)
-    for k in trange(num, desc="Preparing for ANN"):
-        tree.add_item(k, input_cloud[k])
-
-    start = time.time()
     num_trees = 2
-    tree.build(num_trees)
-    end = time.time() - start
-    print("Building %d trees took %d seconds" % (num_trees, end))
+    if tree_file is not None:
+        tree = AnnoyIndex(dim, metric='euclidean')
+        tree.load(tree_file)
+    else:
+        tree = AnnoyIndex(dim, metric='euclidean')
+        for k in trange(num, desc="Preparing for ANN"):
+            tree.add_item(k, input_cloud[k])
+
+        start = time.time()
+        tree.build(num_trees)
+        end = time.time() - start
+        print("Building %d trees took %d seconds" % (num_trees, end))
 
     lengths = []
     num_neighbors = 2000
-    # start = time.time()
-    # # neighbor_list = tree.query_ball_tree(other_tree, r=r, p=p, eps=search_eps)
-    # end = time.time() - start
-    # print("Finding neighbors took %s seconds" % end)
     for k in trange(num, desc="Doing ANN For Radial"):
         lengths.append(get_neighbor_length(k, num_neighbors, int(num_trees*num_neighbors/2), tree, r=r))
 
         # pdb.set_trace()
-
-    # print("neighbors found")
-
-    # lengths = [len(x) for x in neighbor_list]
     mean = np.mean(lengths)
     std = np.std(lengths)
     print("mean is %f" % mean)

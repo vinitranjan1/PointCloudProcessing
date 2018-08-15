@@ -1,3 +1,16 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+A utility function to convert an array of points to a VTKPointCloud object for visualization purposes
+
+Inputs:
+points - array of points
+
+Returns:
+pc - the VTKPointCloud containing the points
+"""
+
 from tqdm import tqdm
 from PlotUtils.VtkPointCloud import VtkPointCloud
 

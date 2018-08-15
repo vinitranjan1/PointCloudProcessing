@@ -1,3 +1,17 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+Another VTK utility class, used to handle simulations
+
+Inputs:
+renderwindow - the VTKRenderWindow the sim will run in
+renderer - the VTKRenderer in renderwindow
+event_lists - list of lists of events, and for each list in event_lists, will have a separate sphere
+iterations - list of iteration numbers, i.e. [100, 200] means sim1 is 100 iterations while sim2 is 200 iterations
+
+Note that if there is only one simulation, then it still assumes the list of events x is passed as [x]
+"""
 import vtk
 import time
 import pdb
@@ -155,6 +169,7 @@ class VtkTimerCallback:
             self.arrow_actors[i] = []
         iren.DestroyTimer(self.timer_id)
 
+    # this function is to transform Area 17's reference frame to ours
     def transform(self, old_pos):
         angle = -0.008726  # 0.5 degrees
         ret = old_pos[:]

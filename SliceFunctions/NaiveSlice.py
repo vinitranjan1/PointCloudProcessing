@@ -14,6 +14,7 @@ points - list containing sliced points
 """
 from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 from tqdm import tqdm
+import numpy as np
 
 
 def naive_slice(data, slice_box=AxisAlignedBox3D()):
@@ -23,5 +24,5 @@ def naive_slice(data, slice_box=AxisAlignedBox3D()):
     for datum in tqdm(data, total=len(data), desc="Slicing"):
         if lower_corner[0] <= datum[0] <= upper_corner[0] and lower_corner[1] <= datum[1]\
                 <= upper_corner[1] and lower_corner[2] <= datum[2] <= upper_corner[2]:
-            points.append(datum)
+            points.append(np.array(datum))
     return points

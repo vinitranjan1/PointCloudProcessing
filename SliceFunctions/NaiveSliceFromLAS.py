@@ -1,3 +1,17 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+Naive implementation of slicing algorithm by brute force checking from .las file
+
+Inputs:
+filename - .las file of points to slice from
+slice_box - AxisAlignedBox3D that gives desired bounding box
+
+Returns:
+points - list containing sliced points
+"""
+
 from Utils.AxisAlignedBox3D import AxisAlignedBox3D
 from laspy.file import File
 from tqdm import tqdm

@@ -1,8 +1,19 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+If you want to write the ANN tree to a file for repeated use, do something like this:
+Refer to https://github.com/spotify/annoy for more details
+
+Inputs:
+input_cloud - set of points
+tree_name - file name that tree will be written to
+dim - dimension of points
+"""
 from Utils.ReadRawLAS import read_raw_las_data
 import time
 from tqdm import trange
 from annoy import AnnoyIndex
-
 
 
 input1 = "MantecaDock/fourPallets.las"

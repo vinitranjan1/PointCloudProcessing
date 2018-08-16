@@ -1,24 +1,34 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+A function to read in points from a las file and return as a list
+Equivalent to subsample_frac_from_las(filename, sample_frac=1) from SubsampleFracFromLAS.py
+
+Inputs:
+filename - las file to read in
+
+Returns:
+output_list - list
+"""
 import numpy as np
 from tqdm import tqdm, trange
 import pdb
 
 
 def threshold_filter(input_list, dim_to_collapse="Z", mesh=0.05, threshold=.25):
-    output_cloud = []
+    output_list = []
     hist, xedges, yedges = __collapse_one_dim(input_list, dim_to_collapse, mesh)
     max_value = max([max(i) for i in hist])
     cutoff = int(threshold * max_value)
     mask = (hist >= cutoff)
 
     for p in tqdm(input_list, total=len(input_list), desc="Filtering"):
-        try:
             x_coord = binary_search(xedges, 0, len(xedges) - 1, p[0])
             y_coord = binary_search(yedges, 0, len(yedges) - 1, p[1])
             if mask[x_coord][y_coord]:
-                output_cloud.append(p)
-        except (IndexError, AssertionError) as e:
-            raise e
-    return output_cloud
+                output_list.append(p)
+    return output_list
 
 
 def point_in_bin(point, target_bin):

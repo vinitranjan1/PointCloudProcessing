@@ -1,3 +1,19 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+A function to log filtering to a text file
+To see direct usage, look at NoVisuals/NoVisualMultiRooms.py
+
+Inputs:
+config_file - text file to append to, and if it doesnt exist, create it
+input_las_file - name of las file filtering was done to
+called_function - name of filter function called on las file
+kwargs - parameters used for that specific filter
+include_las_name - flag used if you want to include a message saying what file you did filtering to
+                this way, if youre doing multiple levels of filtering, then it won't repeat unnecessary information
+done_message - message to write when done with a file
+"""
 import sys
 import os
 

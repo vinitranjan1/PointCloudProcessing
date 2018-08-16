@@ -381,76 +381,35 @@ class PointCloudPlotQt(QWidget):
                 QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
                 return
         else:
-            return #TODO finish this refactor
+            return
         comp = re.compile('\([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\s*,\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\)')
-        corner0 = QInputDialog.getText(self, "Bounding Point 0", "")
+
         # regex from https://stackoverflow.com/questions/12929308/
         #                                   python-regular-expression-that-matches-floating-point-numbers/12929311
-
-        if corner0[1]:
-            m = comp.match(corner0[0])
-            if m:
-                # print("Match found: ", m.group())
-                temp = m.group().replace("(", "")
-                temp = temp.replace(")", "")
-                temp = re.sub(r"\s+", "", temp).split(",")
-                corner_float0 = [float(i) for i in temp]
-                # print(corner_float0)
+        corners = []
+        for c in range(4):
+            corner = QInputDialog.getText(self, "Bounding Point " + str(c), "")
+            if corner[1]:
+                m = comp.match(corner[0])
+                if m:
+                    # print("Match found: ", m.group())
+                    temp = m.group().replace("(", "")
+                    temp = temp.replace(")", "")
+                    temp = re.sub(r"\s+", "", temp).split(",")
+                    corners.append([float(j) for j in temp])
+                    # print(corner_float0)
+                else:
+                    print("Invalid point syntax")
+                    return
             else:
-                print("Invalid point syntax")
                 return
-        else:
-            return
 
-        corner1 = QInputDialog.getText(self, "Bounding Point 1", "")
-        if corner1[1]:
-            m = comp.match(corner1[0])
-            if m:
-                # print("Match found: ", m.group())
-                temp = m.group().replace("(", "")
-                temp = temp.replace(")", "")
-                temp = re.sub(r"\s+", "", temp).split(",")
-                corner_float1 = [float(i) for i in temp]
-                # print(corner_float0)
-            else:
-                print("Invalid point syntax")
-                return
-        else:
-            return
+        corner_float0 = corners[0]
+        corner_float1 = corners[1]
+        corner_float2 = corners[2]
+        corner_float3 = corners[3]
 
-        corner2 = QInputDialog.getText(self, "Bounding Point 2", "")
-        if corner2[1]:
-            m = comp.match(corner2[0])
-            if m:
-                # print("Match found: ", m.group())
-                temp = m.group().replace("(", "")
-                temp = temp.replace(")", "")
-                temp = re.sub(r"\s+", "", temp).split(",")
-                corner_float2 = [float(i) for i in temp]
-                # print(corner_float0)
-            else:
-                print("Invalid point syntax")
-                return
-        else:
-            return
-
-        corner3 = QInputDialog.getText(self, "Bounding Point 3", "")
-        if corner3[1]:
-            m = comp.match(corner3[0])
-            if m:
-                # print("Match found: ", m.group())
-                temp = m.group().replace("(", "")
-                temp = temp.replace(")", "")
-                temp = re.sub(r"\s+", "", temp).split(",")
-                corner_float3 = [float(i) for i in temp]
-                # print(corner_float0)
-            else:
-                print("Invalid point syntax")
-                return
-        else:
-            return
-
-        self.__translate_rotate_xy_helper(corner_float0, corner_float1, corner_float2, corner_float3)
+        self.__translate_rotate_xy_helper(i, corner_float0, corner_float1, corner_float2, corner_float3)
 
     def __on_shift_vector_click(self):
         prompt = QInputDialog.getInt(self, "Plot index to shift", "Index")
@@ -488,14 +447,14 @@ class PointCloudPlotQt(QWidget):
 
         self.__translate_helper(i, shift_float0)
 
-    def __translate_rotate_xy_helper(self, p0, p1, p2, p3):
+    def __translate_rotate_xy_helper(self, i, p0, p1, p2, p3):
         new_origin = np.array(p0)
         s0 = np.array(p0) - new_origin
         s1 = np.array(p1) - new_origin
         s2 = np.array(p2) - new_origin
         s3 = np.array(p3) - new_origin
 
-        w = self.app.focusWidget()
+        w = self.widgets[i]
         vec = s1 - s0
         shift = np.append(new_origin, 0)
         angle = np.arctan2(vec[1], vec[0])  # y coordinate comes first
@@ -504,7 +463,7 @@ class PointCloudPlotQt(QWidget):
         num_points = points.GetNumberOfPoints()
 
         rot_matrix = np.matrix([[np.cos(-angle), -np.sin(-angle)], [np.sin(-angle), np.cos(-angle)]])
-        for k in trange(num_points, desc="Translating"):
+        for k in trange(num_points, desc="Rotating"):
             p = points.GetPoint(k)
             old = np.asarray(p)
             # print(old)
@@ -547,8 +506,8 @@ class PointCloudPlotQt(QWidget):
     def __on_auto_rotate_button_click(self):
         mesh = .05
         threshold = .015
-        image_fname = "temp.png"
-        image_fname_lines = "templines.png"
+        image_fname = "Data/temp.png"
+        image_fname_lines = "Data/templines.png"
         prompt = QInputDialog.getInt(self, "Plot index to rotate", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -650,6 +609,9 @@ class PointCloudPlotQt(QWidget):
             neg_max_frac = neg_h[neg_index_of_max] / len(neg_unscale_slopes)
         except ValueError:
             neg_max_frac = 0
+        except OverflowError:
+            print("Divide by zero found, meaning infinite slope, so should already be rotated")
+            return
 
         if not pos_max_frac and not neg_max_frac:
             print("Hough lines couldn't find any slanted lines, may need to subsample less")
@@ -713,7 +675,7 @@ class PointCloudPlotQt(QWidget):
         points = self.plots[i].getPoints()
         num_points = points.GetNumberOfPoints()
         rot_matrix = np.matrix([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
-        for k in trange(num_points, desc="Translating"):
+        for k in trange(num_points, desc="Rotating"):
             p = points.GetPoint(k)
             old = np.asarray(p)
             # print(old)
@@ -725,15 +687,25 @@ class PointCloudPlotQt(QWidget):
             # print(new)
             # sys.exit()
             points.SetPoint(k, new)
-        temp = subsample_frac(self.plots[i].getPointsAsArray(), .1)
-        temp_threshold = threshold_filter(temp, threshold=.05)
-        minx = min([p[0] for p in temp_threshold])
-        miny = min([p[1] for p in temp_threshold])
-        del temp_threshold
-        minz = 0
 
-        del temp
-        self.__translate_helper(i, [-minx, -miny, -minz])
+        to_shift = QInputDialog.getItem(self, "Shift new min to origin?", "", ["yes", "no"])
+        if to_shift[0] == "yes":
+            temp = subsample_frac(self.plots[i].getPointsAsArray(), .1)
+            temp_threshold = threshold_filter(temp, threshold=.05)
+            minx = min([p[0] for p in temp_threshold])
+            miny = min([p[1] for p in temp_threshold])
+            del temp_threshold
+            minz = 0
+
+            del temp
+            print("shifting to new min")
+            self.__translate_helper(i, [-minx, -miny, -minz])
+        else:
+            self.plots[i].vtkCells.Modified()
+            self.plots[i].vtkPoints.Modified()
+            self.plots[i].vtkDepth.Modified()
+            self.widgets[i].GetRenderWindow().GetInteractor().GetInteractorStyle().ren.ResetCamera()
+            self.widgets[i].GetRenderWindow().Render()
 
     def __on_keep_points_inside_box_click(self):
         prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")

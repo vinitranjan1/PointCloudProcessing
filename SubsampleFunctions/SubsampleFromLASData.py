@@ -1,3 +1,17 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+A function to directly subsample points from a .las file
+Equivalent to Subsample.py, only it reads directly from the las file instead of holding all the points in RAM
+
+Inputs:
+filename - string for las file to sample from
+desired_number_points - desired number of points
+
+Returns:
+points - list of sampled points
+"""
 import numpy as np
 import pdb
 from laspy.file import File
@@ -17,17 +31,17 @@ def subsample_from_las_data(filename, desired_number_points=10000):
         for point in tqdm(in_file.points, total=len(in_file.points), desc="Sampling"):
             # for i in trange(len(in_file.x), desc="Sampling"):
             if i < desired_number_points:
-                points.append(np.asarray([scale(point[0][0], x_s, x_o),
-                                          scale(point[0][1], y_s, y_o),
-                                          scale(point[0][2], z_s, z_o)], dtype=np.float32))
+                points.append(np.array([scale(point[0][0], x_s, x_o),
+                                        scale(point[0][1], y_s, y_o),
+                                        scale(point[0][2], z_s, z_o)], dtype=np.float32))
                 # points.append(np.asarray([in_file.x[i], in_file.y[i], in_file.z[i]], dtype=np.float32))
                 # pdb.set_trace()
             else:
                 rand = np.random.randint(0, i)
                 if rand < desired_number_points:
-                    points[rand] = np.asarray([scale(point[0][0], x_s, x_o),
-                                               scale(point[0][1], y_s, y_o),
-                                               scale(point[0][2], z_s, z_o)], dtype=np.float32)
+                    points[rand] = np.array([scale(point[0][0], x_s, x_o),
+                                             scale(point[0][1], y_s, y_o),
+                                             scale(point[0][2], z_s, z_o)], dtype=np.float32)
             i += 1
     return points
 

@@ -8,6 +8,7 @@ __pycache__/
 venv/
 # data files
 
+Data/
 MantecaRoom1/
 MantecaRoom2/
 MantecaRoom3/

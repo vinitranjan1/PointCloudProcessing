@@ -33,7 +33,7 @@ def guided_filter_kNN(input_cloud, k=50, filter_eps=.05):
 
     neighbor_list = []
     for q in tqdm(input_cloud, total=len(input_cloud), desc="Querying neighbors"):
-        _, neighbors = tree.query(x=q, k=k, eps=0.5)
+        _, neighbors = tree.query(x=q, k=k, eps=0.5) # this eps allows for a little inaccuracy for speed tradeoff
         neighbor_list.append(neighbors)
     # neighbor_list = tree.query(x=input_cloud, k=k, distance_upper_bound=5)
     # print(neighbor_list)

@@ -13,32 +13,32 @@ but this is not explicitly handled
 
 Assumes (x,y,z) coordinates
 """
-from numpy import array, float32, all
+import numpy as np
 
 
 class AxisAlignedBox3D:
 
     # initialize by the two points given
-    def __init__(self, point1=array([0, 0, 0], dtype=float32), point2=array([0, 0, 0], dtype=float32)):
+    def __init__(self, point1=np.array([0, 0, 0], dtype=np.float32), point2=np.array([0, 0, 0], dtype=np.float32)):
         self.point1 = point1
         self.point2 = point2
 
     # alternative initialization
     @staticmethod
-    def init_box_center(center=array([0, 0, 0], dtype=float32), x_half=1, y_half=1, z_half=1):
-        return AxisAlignedBox3D(array([center[0] + x_half, center[1] + y_half, center[2] + z_half], dtype=float32),
-                                array([center[0] - x_half, center[1] - y_half, center[2] - z_half], dtype=float32))
+    def init_box_center(center=np.array([0, 0, 0], dtype=np.float32), x_half=1, y_half=1, z_half=1):
+        return AxisAlignedBox3D(np.array([center[0] + x_half, center[1] + y_half, center[2] + z_half], dtype=np.float32),
+                                np.array([center[0] - x_half, center[1] - y_half, center[2] - z_half], dtype=np.float32))
 
     # return the eight corners
     def get_corners(self):
-        return [array([self.point1[0], self.point1[1], self.point1[2]], dtype=float32),
-                array([self.point1[0], self.point2[1], self.point1[2]], dtype=float32),
-                array([self.point2[0], self.point1[1], self.point1[2]], dtype=float32),
-                array([self.point2[0], self.point2[1], self.point1[2]], dtype=float32),
-                array([self.point1[0], self.point1[1], self.point2[2]], dtype=float32),
-                array([self.point1[0], self.point2[1], self.point2[2]], dtype=float32),
-                array([self.point2[0], self.point1[1], self.point2[2]], dtype=float32),
-                array([self.point2[0], self.point2[1], self.point2[2]], dtype=float32)]
+        return [np.array([self.point1[0], self.point1[1], self.point1[2]], dtype=np.float32),
+                np.array([self.point1[0], self.point2[1], self.point1[2]], dtype=np.float32),
+                np.array([self.point2[0], self.point1[1], self.point1[2]], dtype=np.float32),
+                np.array([self.point2[0], self.point2[1], self.point1[2]], dtype=np.float32),
+                np.array([self.point1[0], self.point1[1], self.point2[2]], dtype=np.float32),
+                np.array([self.point1[0], self.point2[1], self.point2[2]], dtype=np.float32),
+                np.array([self.point2[0], self.point1[1], self.point2[2]], dtype=np.float32),
+                np.array([self.point2[0], self.point2[1], self.point2[2]], dtype=np.float32)]
 
     # return the smallest/largest x/y/z coordinate
     def min_x(self):
@@ -76,16 +76,16 @@ class AxisAlignedBox3D:
 
     # return the coordinates of the box with smallest of each value
     def min_corner(self):
-        return array([self.min_x(), self.min_y(), self.min_z()], dtype=float32)
+        return np.array([self.min_x(), self.min_y(), self.min_z()], dtype=np.float32)
 
     def max_corner(self):
-        return array([self.max_x(), self.max_y(), self.max_z()], dtype=float32)
+        return np.array([self.max_x(), self.max_y(), self.max_z()], dtype=np.float32)
 
     def get_dimensions(self):
         return self.max_corner() - self.min_corner()
 
     def get_centroid(self):
-        return array([self.center_x(), self.center_y(), self.center_z()], dtype=float32)
+        return np.array([self.center_x(), self.center_y(), self.center_z()], dtype=np.float32)
 
     # returns array of points
     def get_edges(self):
@@ -125,4 +125,4 @@ class AxisAlignedBox3D:
              or self.contains_point(other_corners[6]) or self.contains_point(other_corners[7]))
 
     def equals_box(self, other_box):
-        return all(self.max_corner() == other_box.max_corner()) and all(self.min_corner() == other_box.min_corner())
+        return np.all(self.max_corner() == other_box.max_corner()) and np.all(self.min_corner() == other_box.min_corner())

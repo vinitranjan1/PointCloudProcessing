@@ -2,6 +2,10 @@
 
 Most of how to do things are in the specific documentation for the respective functions, but a couple of things to note here
 
+## **Before Running**
+Check the [BaseProjectDirectory.py](~/BaseProjectDirectory.py) file and change the check to your home directory
+as well as the base project directory.
+
 ## Using LASTools
 This section describes how to use functionality such as zipping/unzipping files or merging
 1. Download the LAStools package from [their website](https://rapidlasso.com/lastools/)

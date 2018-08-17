@@ -3,7 +3,6 @@
 Most of how to do things are in the specific documentation for the respective functions, but a couple of things to note here
 
 ## Using LASTools
-=====
 This section describes how to use functionality such as zipping/unzipping files or merging
 1. Download the LAStools package from [their website](https://rapidlasso.com/lastools/)
 2. When you unzip the LAStools folder, there is a makfile, so you can use it to build the necessary binaries
@@ -13,9 +12,8 @@ This section describes how to use functionality such as zipping/unzipping files 
 
 
 ## Using AWS
-=====
 The code is written in such a way that any of the computation is modularized out, so you can quite easily spin up
-and AWS server and send over the filters + data (with something like scp) and just run
+an AWS server and send over the filters + data (with something like scp) and just run
 
 There's no need to send over the visuals because you can send up a .las file, run the filter you want, and save the result
 as another las file and then scp the resultant file back

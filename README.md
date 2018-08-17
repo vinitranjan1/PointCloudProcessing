@@ -3,7 +3,7 @@
 Most of how to do things are in the specific documentation for the respective functions, but a couple of things to note here
 
 ## **Before Running**
-Check the [BaseProjectDirectory.py](~/BaseProjectDirectory.py) file and change the check to your home directory
+Check the [BaseProjectDirectory.py](BaseProjectDirectory.py) file and change the check to your home directory
 as well as the base project directory.
 
 ## Using LASTools

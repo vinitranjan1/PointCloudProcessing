@@ -27,7 +27,7 @@ from PyQt5 import Qt
 class PointCloudPlotQt(QWidget):
     def __init__(self, plots=None, las_header=None, axes_on=False, app=None, background=(.2, .3, .4)):
         """
-        :param plots: list of lists of points to plot
+        :param plots: list of VTKPointClouds to plot
         :param las_header: a las_header that is optionally supplied if reading from a las file, helpful for saving
         :param axes_on: flag for turning axes on/off
         :param app: the main QApplication driving the GUI
@@ -77,7 +77,7 @@ class PointCloudPlotQt(QWidget):
 
     def add_buttons(self):
         """
-        a function for organization purposes
+        a function for organization purposes, put all the buttons you want here
         """
         self.add_button("Toggle Axes", self.__on_toggle_axes_click)
         self.add_button("Snap To First", self.__on_snap_button_click)
@@ -97,6 +97,14 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Test", self.__on_test_click)
 
     def add_button(self, label, call):
+        """
+        :param label: the desired label for the button in the GUI
+        :param call: the desired functional call when the button is click
+
+        note that if you want to pass in a function with arguments, you need use a lambda, i.e.
+        self.add_button("Example", lambda x: self.__example_function(x))
+
+        """
         button = QPushButton(label, self)
         button.resize(100, 100)
         button.clicked.connect(call)
@@ -104,6 +112,12 @@ class PointCloudPlotQt(QWidget):
         button.show()
 
     def plot_point_cloud_qt(self, plot, widget):
+        """
+        :param plot: the specific VTKPointCloud being plotted
+        :param widget: the QVTKRenderWindowInteractor that acts as the container for the specific VTK object
+
+        A function to plot a single VTKPointCloud
+        """
         rw = widget.GetRenderWindow()
         iren = widget.GetRenderWindow().GetInteractor()
         # iren.SetRenderWindow(rw)
@@ -132,12 +146,24 @@ class PointCloudPlotQt(QWidget):
         ren.ResetCamera()
 
         iren.SetInteractorStyle(CustomInteractorStyle(ren=ren, corner=corner, app=self.app))
+        # a picker is used for clicking interactions if you want any cutsom ones
         picker = vtk.vtkPointPicker()
         iren.SetPicker(picker)
         rw.Render()
 
     @staticmethod
     def __binary_search(arr, left, right, x):
+        """
+        :param arr: array to search
+        :param left: index to start left pointer
+        :param right: index to start right pointer
+        :param x: value we're searching for
+        :return: index of where the point would exist
+
+        Note that the use of this binary search is such that because of the number of decimals on these points,
+            x will never exactly be found, so that check isnt even considered and it just finds the location where
+            x would be
+        """
         while left <= right:
             mid = left + int((right - left) / 2)
             if arr[mid] < x:
@@ -147,6 +173,9 @@ class PointCloudPlotQt(QWidget):
         return left-1
 
     def __on_toggle_axes_click(self):
+        """
+        A function to toggle the axes on/off
+        """
         if self.axes_on:
             for i in range(len(self.axes_actors)):
                 w = self.widgets[i]
@@ -163,6 +192,9 @@ class PointCloudPlotQt(QWidget):
             self.axes_on = True
 
     def __on_snap_button_click(self):
+        """
+        A function that cases all of the other plots to snap to the same orientation as the first one
+        """
         first_plot = self.widgets[0]
         position = first_plot.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
         focus = first_plot.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFocalPoint()
@@ -177,6 +209,9 @@ class PointCloudPlotQt(QWidget):
                 # print(w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetParallelProjection())
 
     def __on_default_view_button(self):
+        """
+        A function that snaps all plots to their original orientation (A reset)
+        """
         for i in range(len(self.widgets)):
             w = self.widgets[i]
             default = self.widget_defaults[i]
@@ -186,6 +221,9 @@ class PointCloudPlotQt(QWidget):
             w.GetRenderWindow().GetInteractor().GetInteractorStyle().edit_display_angle()
 
     def __on_set_default_view_button(self):
+        """
+        A function that changes the default view of the MOST RECENTLY INTERACTED WITH plot to where it currently is
+        """
         w = self.app.focusWidget()
         position = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetPosition()
         focus = w.GetRenderWindow().GetInteractor().GetInteractorStyle().camera.GetFocalPoint()
@@ -194,6 +232,15 @@ class PointCloudPlotQt(QWidget):
         self.widget_defaults[i] = (position, focus, viewup)
 
     def __on_save_button_click(self):
+        """
+        Function to save a plot as a las file
+        Note that the file will save relative to wherever the plotting function is called from
+        So if calling from Main.py, can just do Data/temp.las to save it in the Data folder
+
+        Note that the second prompt will only come up if the entire GUI was initialized with self.las_header = None
+        In which case, this second prompt wants an existing las file from which it will copy the header
+        This is why its easier to pass in the las_header when initializing the GUI, saves trouble on this step
+        """
         # note that the next line is correct because "self" refers to the overall PointCloudPlotQt QWidget
         prompt = QInputDialog.getInt(self, "Plot index to save", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was accepted
@@ -201,7 +248,6 @@ class PointCloudPlotQt(QWidget):
             try:
                 to_save = self.widgets[int(prompt[0])]
                 filename = QInputDialog.getText(self, "File Path From LineageProject:", base_project_dir)
-                # assume this is from the test folder, TODO figure out better way
                 # path = os.path.join(os.path.realpath('..'), filename[0])
                 if not filename[1]:
                     return
@@ -211,7 +257,7 @@ class PointCloudPlotQt(QWidget):
                 if os.path.exists(path):
                     print("Overwriting")
                 if self.las_header is None:
-                    file_for_header = QInputDialog.getText(self, "Path for Las Header:", "Name")
+                    file_for_header = QInputDialog.getText(self, "Path for Las Header:", base_project_dir)
                     # path_for_header = os.path.join(os.path.realpath('..'), file_for_header[0])
                     path_for_header = file_for_header[0]
                     try:
@@ -253,6 +299,23 @@ class PointCloudPlotQt(QWidget):
                     header_file.close()
 
     def __on_collapse_button_click(self):
+        """
+        Function that takes in the desired dimension to collapse, valid inputs are in the form 'X' or 'XY'
+            Note that collapsing 'Z' means removing the Z dimension
+        Needs to be capitalized # TODO theres no reason for this, modify to accept lowercase as well
+        Depending on if you collapse one or two dimensions, it calls the respective helper method
+        """
+        prompt = QInputDialog.getInt(self, "Plot index to collapse", "Index")
+        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
+        if prompt[1]:
+            try:
+                i = prompt[0]
+                w = self.widgets[i]  # only to throw the Index Error if invalid index given
+            except IndexError:
+                QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
+                return
+        else:
+            return
         to_collapse = QInputDialog.getText(self, "Dimension(s) to collapse:", "Here")
         # print(to_collapse)
         if not to_collapse[1]:
@@ -261,11 +324,28 @@ class PointCloudPlotQt(QWidget):
             QMessageBox.about(self, "Error", "Invalid input, must be of form such as 'X' or 'XY'")
             return
         elif len(to_collapse[0]) == 1:
-            self.__collapse_one_dim(to_collapse[0])
+            self.__collapse_one_dim(i, to_collapse[0])
         else:
-            self.__collapse_two_dim(to_collapse[0])
+            self.__collapse_two_dim(i, to_collapse[0])
 
     def __on_collapse_uniform_button_click(self):
+        """
+        Function that does essentially same thing as self.__on_collapse_button_click, only this function
+            calls it such that the resultant plot will have any nonzero points in the 2D histogram all be
+            brought up to the same intensity
+        Also, this one does not handle the case of collapsing two dimensions
+        """
+        prompt = QInputDialog.getInt(self, "Plot index to collapse", "Index")
+        # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
+        if prompt[1]:
+            try:
+                i = prompt[0]
+                w = self.widgets[i]  # only to throw the Index Error if invalid index given
+            except IndexError:
+                QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
+                return
+        else:
+            return
         to_collapse = QInputDialog.getText(self, "Dimension(s) to collapse:", "Here")
         # print(to_collapse)
         if not to_collapse[1]:
@@ -274,16 +354,24 @@ class PointCloudPlotQt(QWidget):
             QMessageBox.about(self, "Error", "Invalid input, must be of form such as 'Z'")
             return
         else:
-            self.__collapse_one_dim(to_collapse[0], uniform_collapse=True)
+            self.__collapse_one_dim(i, to_collapse[0], uniform_collapse=True)
 
-    def __collapse_one_dim(self, to_collapse, uniform_collapse=False):
+    def __collapse_one_dim(self, i, to_collapse, uniform_collapse=False):
+        """
+        :param i: plot index to collapse
+        :param to_collapse: dimension to collapse
+        :param uniform_collapse: flag to determine if the collapsed 2D histogram should or should not weight the
+            intensities based on the number of points in the bin
+
+        this helper function actually calculates the creates the 2D histogram for plot at index i
+        """
         mesh = QInputDialog.getDouble(self, "Meshing Distance", "In meters", decimals=3)
         axes_on = QInputDialog.getItem(self, "Axes On?", "", ["yes", "no"])
         if axes_on[0] == "yes":
             axes_setting = "on"
         else:
             axes_setting = "off"
-        w = self.app.focusWidget()
+        w = self.widgets[i]
         label_to_dim = {"X": 0, "Y": 1, "Z": 2}
         dim_to_label = {0: "X", 1: "Y", 2: "Z"}
         try:
@@ -295,7 +383,6 @@ class PointCloudPlotQt(QWidget):
         dims.remove(collapse_dim)
         arr1 = []
         arr2 = []
-        i = self.widgets.index(w)
         points = self.plots[i].getPoints()
         for k in tqdm(range(points.GetNumberOfPoints()), total=points.GetNumberOfPoints(), desc="Getting Points"):
             p = points.GetPoint(k)
@@ -343,9 +430,15 @@ class PointCloudPlotQt(QWidget):
             print("Finding histogram took %.2f seconds" % end)
             plt.show()
 
-    def __collapse_two_dim(self, to_collapse):
-        mesh = QInputDialog.getText(self, "Meshing Distance", "In meters")
-        w = self.app.focusWidget()
+    def __collapse_two_dim(self, i, to_collapse):
+        """
+        :param i: plot index to collapse
+        :param to_collapse: dimensions to collapse
+
+        this helper function actually calculates the creates the histogram for plot at index i
+        """
+        mesh = QInputDialog.getDouble(self, "Meshing Distance", "In meters", decimals=3)
+        w = self.widgets[i]
         label_to_dim = {"X": 0, "Y": 1, "Z": 2}
         dim_to_label = {0: "X", 1: "Y", 2: "Z"}
         try:
@@ -357,8 +450,7 @@ class PointCloudPlotQt(QWidget):
         dims = [0, 1, 2]
         dims.remove(dim_1)
         dims.remove(dim_2)
-        arr = [] #TODO finish this
-        i = self.widgets.index(w)
+        arr = []
         points = self.plots[i].getPoints()
         for k in tqdm(range(points.GetNumberOfPoints()), total=points.GetNumberOfPoints(), desc="Getting Points"):
             p = points.GetPoint(k)
@@ -381,6 +473,12 @@ class PointCloudPlotQt(QWidget):
         plt.show()
 
     def __on_translate_rotate_xy_button_click(self):
+        """
+        One of the rotation functions, lets you pick four points in the XY plane and the first and point picked
+            will be moved to the origin while the second point will be on the positive x-axis
+        When prompting for points, they need to be of the form (x, y)
+        # TODO remove the prompt for points 3/4, they aren't actually used for anything since points 1/2 define the rotation
+        """
         prompt = QInputDialog.getInt(self, "Plot index to translate/rotate", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -409,7 +507,7 @@ class PointCloudPlotQt(QWidget):
                     corners.append([float(j) for j in temp])
                     # print(corner_float0)
                 else:
-                    print("Invalid point syntax")
+                    print("Invalid point syntax, needs to be like (x, y)")
                     return
             else:
                 return
@@ -422,6 +520,9 @@ class PointCloudPlotQt(QWidget):
         self.__translate_rotate_xy_helper(i, corner_float0, corner_float1, corner_float2, corner_float3)
 
     def __on_shift_vector_click(self):
+        """
+        Function to prompt for the vector by which you want to shift all points in a certain plot
+        """
         prompt = QInputDialog.getInt(self, "Plot index to shift", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -432,7 +533,7 @@ class PointCloudPlotQt(QWidget):
                 QMessageBox.about(self, "Error", "Index out of bounds exception, remember to zero index.")
                 return
         else:
-            return  # TODO finish this refactor
+            return  #]]
 
         comp = re.compile('\([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?'
                           '(\s*,\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?){2}\)')
@@ -458,6 +559,16 @@ class PointCloudPlotQt(QWidget):
         self.__translate_helper(i, shift_float0)
 
     def __translate_rotate_xy_helper(self, i, p0, p1, p2, p3):
+        """
+        :param i: plot index to act on
+        :param p0: first point
+        :param p1: second point
+        :param p2: third point
+        :param p3: fourth point
+        # TODO remove p2/p3, they arent actualy used for anything
+
+        The helper function corresponding to self.__on_translate_rotate_xy_button_click
+        """
         new_origin = np.array(p0)
         s0 = np.array(p0) - new_origin
         s1 = np.array(p1) - new_origin
@@ -496,6 +607,13 @@ class PointCloudPlotQt(QWidget):
         self.__on_set_default_view_button()
 
     def __translate_helper(self, i, shift):
+        """
+        :param i: index of plot to shift
+        :param shift: vector to shift by
+
+        Helper function to shift all points in plot i by vector shift
+
+        """
         w = self.widgets[i]
         points = self.plots[i].getPoints()
         num_points = points.GetNumberOfPoints()
@@ -514,6 +632,20 @@ class PointCloudPlotQt(QWidget):
         self.__on_set_default_view_button()
 
     def __on_auto_rotate_button_click(self):
+        """
+        A somewhat convoluted algorithm that uses the inherent warehouse structure to try to auto rotate to snap
+            the outer wall of the warehouse to the coordinate axes
+
+        First, the algorithm uses the threshold filter to remove ghost points because the walls should survive it
+        Then, it creates the 2D histogram in the Z dimension and uses openCV's Houghline algorithm to try and
+            sketch in the lines, a majority of which should line up with the walls
+        Then, it bins the slopes and takes the bin with the highest number of points because there can be some random
+            lines that arent actually the walls, but the bin with the highest number of points is in some sense the
+            "most confident" slope, which then get averaged
+        This slope is then used for rotation so that it lines up with the axis
+        It is recommended that when you use this function, you agree to the prompt where it shifts the new minimum
+            to the origin, but not strictly necessary because the plot can always be shifted
+        """
         mesh = .05
         threshold = .015
         image_fname = "Data/temp.png"
@@ -575,6 +707,10 @@ class PointCloudPlotQt(QWidget):
             _slope = (_y1 - _y0) / (_x1 - _x0)
             y_int = _y0 - _slope * _x0
             return _slope * _p + y_int
+
+        # NOTE that in openCV, and in general computer coordinate systems, the system is origin at top left
+        #   positive x right, positive y down, hence why positive and negative may appear to be flipped
+        #   but they actually are correct
 
         for i in range(a):
             cv2.line(img, (lines[i][0][0], lines[i][0][1]), (lines[i][0][2], lines[i][0][3]), (0, 0, 255), 1,
@@ -647,6 +783,10 @@ class PointCloudPlotQt(QWidget):
             self.__rotation_helper(prompt[0], angle)
 
     def __on_rotate_by_angle_click(self):
+        """
+        Function that prompts for plot to rotate points in and the angle IN DEGREES to rotate by
+            Note that the angle is converted to radians before passing to the helper function
+        """
         prompt = QInputDialog.getInt(self, "Plot index to rotate", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -666,6 +806,10 @@ class PointCloudPlotQt(QWidget):
         self.__rotation_helper(i, angle)
 
     def __on_rotate_90_click(self):
+        """
+        Function that prompts for plot index to rotate points and rotates 90 degrees counterclockwise
+        Convenient to have this be its own button because the auto rotate can be off by 90 degrees
+        """
         prompt = QInputDialog.getInt(self, "Plot index to rotate", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -680,6 +824,15 @@ class PointCloudPlotQt(QWidget):
         self.__rotation_helper(i, np.pi/2)
 
     def __rotation_helper(self, i, angle):
+        """
+        :param i: plot index to rotate
+        :param angle: angle IN RADIANS to rotate by
+
+        Helper function that rotates points in plot i by angle in radians
+
+        Note that this helper function, after rotation, prompts for if you want to move the new minimum value to the
+            origin, but it uses the threshold filter first for robustness
+        """
         # print(i)
         # print(self.plots)
         points = self.plots[i].getPoints()
@@ -718,6 +871,9 @@ class PointCloudPlotQt(QWidget):
             self.widgets[i].GetRenderWindow().Render()
 
     def __on_keep_points_inside_box_click(self):
+        """
+        A function that prompts for two points to define an AxisAlignedBox3D and all points INSIDE the box are kept
+        """
         prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -782,6 +938,11 @@ class PointCloudPlotQt(QWidget):
         self.__translate_helper(i, -new_min)
 
     def __on_keep_points_outside_box_click(self):
+        """
+        A function that prompts for two points to define an AxisAlignedBox3D and all points OUTSIDE the box are kept
+        TODO in all honesty, this method and self.__on_keep_points_inside_box_click should be the same method
+        TODO    with a flag as to whether the points are kept or discarded, but I got lazy
+        """
         prompt = QInputDialog.getInt(self, "Plot index to cull", "Index")
         # note that prompt returns as ('int_inputted', bool) where bool represents if the prompt was taken
         if prompt[1]:
@@ -843,6 +1004,9 @@ class PointCloudPlotQt(QWidget):
         del points_to_keep
 
     def __on_simulate_button_click(self):
+        """
+        Function that runs simulations in the FIRST plot
+        """
         w = self.widgets[0]
 
         sim1 = "Simulation/pose_log_mission1_may_3.csv"
@@ -875,6 +1039,13 @@ class PointCloudPlotQt(QWidget):
 
 
 def create_point_cloud_plot_qt(plots, input_header=None, axes_on=False):
+    """
+    :param plots: list of VTKPointClouds to plot
+    :param input_header: las file header, mostly for saving purposes
+    :param axes_on: flag for turning on/off axes
+
+    The driver function to start the GUI, should always start the GUI by calling this method
+    """
     app = QApplication(sys.argv)
     pc = PointCloudPlotQt(plots, input_header, axes_on, app)
     sys.exit(app.exec_())

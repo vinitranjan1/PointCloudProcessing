@@ -8,6 +8,7 @@ from Utils.ReadRawLAS import read_raw_las_data
 from Utils.SavePointsAsLAS import save_points_as_las
 from laspy.file import File
 
+# input/output file names
 room2 = "../MantecaRoom2/room2.las"
 room3 = "../MantecaRoom3/room3.las"
 room4 = "../MantecaRoom4/room4S.las"
@@ -51,7 +52,7 @@ with File(room3, mode='r') as f:
     save_points_as_las(points, room3out, f.header)
     print("Finished Room 3")
     del points
-exit(0)
+
 with File(room4, mode='r') as f:
     print("Starting Room 3")
     # points = subsample_frac_from_las_data(room2, sample_frac=.01)

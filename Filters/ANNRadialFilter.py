@@ -1,3 +1,33 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+A modification to the RadiusOutlierFilter.py algorithm (same basic idea)
+
+The modification is dropping the kD tree to do the k nearest neighbors step for an approximate nearest neighbor tree
+    provided from the package annoy
+
+This version trades a little accuracy but for a drastic increase in speed
+
+HEAVILY recommend using this instead of the deterministic one
+
+the binary_search and get_neighbor_length methods are helper functions for the actual filter
+
+Inputs:
+input_cloud - list containing point cloud to filter
+r - radius to use
+sd_cutoff - same as in RadiusOutlierFilter.py, refer there to see exact usage
+dim - dimension of points (will likely always be 3 for our applications)
+metric - distance metric to use, usually will be Euclidean, check the annoy github page for all options
+tree_file - if you want to do multiple trials, you can build and save the ANN tree to disk
+    (check https://github.com/spotify/annoy for details) and so, if you supply the file here itll load from disk
+    instead od recomputing
+config_file - if a flag is put in here, the function will return the result as well as a dictionary of parameters used
+    for logging purposes, check NoVisuals/NoVisualMultiRooms.py for usage
+
+Returns:
+output_cloud - list containing filtered points
+"""
 import numpy as np
 import pdb
 from scipy.spatial import kdtree
@@ -9,11 +39,6 @@ from annoy import AnnoyIndex
 def binary_search(tree, arr, left, right, curr, r):
     while left <= right:
         mid = left + int((right - left) / 2)
-        # print("left: %f" % left)
-        # print("mid: %f" % mid)
-        # print("right: %f" % right)
-        # if arr[mid] == target:
-        #     return mid
         if tree.get_distance(curr, arr[mid]) < r:
             left = mid + 1
         else:

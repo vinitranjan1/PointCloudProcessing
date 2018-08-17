@@ -1,3 +1,23 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+An slight modification of the guided point cloud filtering algorithm from Han, et al., 2017
+https://doi.org/10.1007/s11042-017-5310-9
+
+Look at ANNGuidedFilter.py for more details
+
+This script is for the case where you want to try tuning epsilon and do different epsilons at the same time
+
+Inputs:
+input_list - list containing point cloud to filter
+neighbors - number of neighbors
+eps_list - list of epsilons you want to try
+dim - dimension of points (will likely always be 3 for our applications)
+
+Returns:
+outs - list of lists of points, same size as eps_list
+"""
 import numpy as np
 import pdb
 from scipy.spatial import kdtree

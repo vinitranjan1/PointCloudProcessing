@@ -7,7 +7,8 @@ A filter that rounds off points to the desired number of decimal places and remo
 Inputs:
 input_list - list of points to round
 decimal_places - number of decimal places to round to
-config_file -
+config_file - if a flag is put in here, the function will return the result as well as a dictionary of parameters used
+    for logging purposes, check NoVisuals/NoVisualMultiRooms.py for usage
 
 Returns:
 list of rounded points

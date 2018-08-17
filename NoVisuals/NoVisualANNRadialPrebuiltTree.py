@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../')
-from Filters.ANNRadialFilterPrebuiltTreeMultiStdev import ann_radial_filter_prebuilt_tree_multi_stdev
+from Filters.ANNRadialMultiStdev import ann_radial_filter_multi_stdev
 import numpy as np
 from Utils.ReadRawLAS import read_raw_las_data
 from laspy.file import File
@@ -16,7 +16,7 @@ with File(input1, mode='r') as f:
     input_header = f.header
 
     raw_points = read_raw_las_data(input1)
-    points = ann_radial_filter_prebuilt_tree_multi_stdev(raw_points, r=.6, tree_file=tree_file)
+    points = ann_radial_filter_multi_stdev(raw_points, r=.6, tree_file=tree_file)
 
     #
     #

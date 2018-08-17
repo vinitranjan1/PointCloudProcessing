@@ -1,3 +1,31 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+An slight modification of the guided point cloud filtering algorithm from Han, et al., 2017
+https://doi.org/10.1007/s11042-017-5310-9
+
+The modification is dropping the kD tree to do the k nearest neighbors step for an approximate nearest neighbor tree
+    provided from the package annoy
+
+This version trades a little accuracy but for a drastic increase in speed
+
+HEAVILY recommend using this instead of the deterministic one
+
+Inputs:
+input_list - list containing point cloud to filter
+num_neighbors - number of neighbors
+filter_eps - (epsilon) as desired tuning constant for accuracy (look at paper for details)
+dim - dimension of points (will likely always be 3 for our applications)
+tree_file - if you want to do multiple trials, you can build and save the ANN tree to disk
+    (check https://github.com/spotify/annoy for details) and so, if you supply the file here itll load from disk
+    instead of recomputing
+config_file - if a flag is put in here, the function will return the result as well as a dictionary of parameters used
+    for logging purposes, check NoVisuals/NoVisualMultiRooms.py for usage
+
+Returns:
+output_cloud - list containing filtered points
+"""
 import numpy as np
 import pdb
 from scipy.spatial import kdtree

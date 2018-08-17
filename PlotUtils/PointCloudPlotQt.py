@@ -26,6 +26,13 @@ from PyQt5 import Qt
 
 class PointCloudPlotQt(QWidget):
     def __init__(self, plots=None, las_header=None, axes_on=False, app=None, background=(.2, .3, .4)):
+        """
+        :param plots: list of lists of points to plot
+        :param las_header: a las_header that is optionally supplied if reading from a las file, helpful for saving
+        :param axes_on: flag for turning axes on/off
+        :param app: the main QApplication driving the GUI
+        :param background: tuple of 0-1's for background color
+        """
         super().__init__()
         self.plots = plots
         self.las_header = las_header
@@ -69,6 +76,9 @@ class PointCloudPlotQt(QWidget):
         # sys.exit(self.app.exec_())
 
     def add_buttons(self):
+        """
+        a function for organization purposes
+        """
         self.add_button("Toggle Axes", self.__on_toggle_axes_click)
         self.add_button("Snap To First", self.__on_snap_button_click)
         self.add_button("GoTo Default View", self.__on_default_view_button)
@@ -85,6 +95,13 @@ class PointCloudPlotQt(QWidget):
         self.add_button("Keep Points Outside Box", self.__on_keep_points_outside_box_click)
         self.add_button("Simulate", self.__on_simulate_button_click)
         self.add_button("Test", self.__on_test_click)
+
+    def add_button(self, label, call):
+        button = QPushButton(label, self)
+        button.resize(100, 100)
+        button.clicked.connect(call)
+        self.bl.addWidget(button)
+        button.show()
 
     def plot_point_cloud_qt(self, plot, widget):
         rw = widget.GetRenderWindow()
@@ -118,13 +135,6 @@ class PointCloudPlotQt(QWidget):
         picker = vtk.vtkPointPicker()
         iren.SetPicker(picker)
         rw.Render()
-
-    def add_button(self, label, call):
-        button = QPushButton(label, self)
-        button.resize(100, 100)
-        button.clicked.connect(call)
-        self.bl.addWidget(button)
-        button.show()
 
     @staticmethod
     def __binary_search(arr, left, right, x):

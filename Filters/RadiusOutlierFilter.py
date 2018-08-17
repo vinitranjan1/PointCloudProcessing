@@ -1,3 +1,24 @@
+"""
+Vinit Ranjan, Chris Eckman
+Lineage Logistics
+
+NOTE that this is also known throughout the code as the 'Radial Filter'
+
+An intuitive filter, where we look at the mean number of neighbors in a given radius around each point
+    Each point that has less than [mean - sd_cutoff * std (standard deviation)] number of neighbors is removed
+    Points that have too few neighbors are likely just ghost points
+
+Inputs:
+input_cloud - array containing points to filter
+r - radius to search in
+search_eps - a parameter to tradeoff accuracy for speed, look at scipy KDtree documentation to see exactly how
+p - which Minkowski p-norm to use for distance
+sd_cutoff - parameter for cutoff, and inversely related in the sense that a higher sd_cutoff means more points survive
+    the filter
+
+Returns:
+output_cloud - array containing filtered points
+"""
 import numpy as np
 import pdb
 from scipy.spatial import kdtree

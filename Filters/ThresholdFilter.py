@@ -2,14 +2,22 @@
 Vinit Ranjan, Chris Eckman
 Lineage Logistics
 
-A function to read in points from a las file and return as a list
-Equivalent to subsample_frac_from_las(filename, sample_frac=1) from SubsampleFracFromLAS.py
+A function for "threshold filtering" - the idea is that you mesh all the points into bins of size mesh x mesh
+    by removing dim_to_collapse
+Any points that live in a bin, b, such that the number of points in b is at least the threshold*max(size(bins))
+    are the points that survive
+For example, if there are 4 bins and the number of points are [1, 1.5, 3, 4] and threshold = .5, then the points in
+    bins of size 3 and 4 survive the filter because the max is 4 and 4 * .5 = 2
 
 Inputs:
 filename - las file to read in
+dim_to_collapse - dimension to remove from consideration, i.e. using "Z" meshes in the XY-plane
+    must be either "X", "Y", or "Z"
+mesh - bin size, so resulting bins are size mesh x mesh
+threshold - parameter used to determing required density for bins to survive
 
 Returns:
-output_list - list
+output_list - list of thresholded points
 """
 import numpy as np
 from tqdm import tqdm, trange

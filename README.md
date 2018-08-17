@@ -8,7 +8,7 @@ This section describes how to use functionality such as zipping/unzipping files 
 2. When you unzip the LAStools folder, there is a makfile, so you can use it to build the necessary binaries
 3. After you make the binaries, you have funcitonality such as laszip, lasmerge, las2txt, etc. from their bin
 4. For example, the syntax for converting between .laz and .las is as follows:
-..* /path/to/LAStools/bin/laszip -i /path/to/input_file.laz -o /path/to/output_file.las
+    /path/to/LAStools/bin/laszip -i /path/to/input_file.laz -o /path/to/output_file.las
 
 
 ## Using AWS

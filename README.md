@@ -1,6 +1,7 @@
-# PointCloudLineage
+# PointCloudProcessing
 
-Most of how to do things are in the specific documentation for the respective functions, but a couple of things to note here
+Python based software to allow visualization and manipulation of point clouds in either .las or .laz file formats.
+Typical usage shown in Main.py and Tests folder.
 
 ## **Before Running**
 Check the [BaseProjectDirectory.py](BaseProjectDirectory.py) file and change the check to your home directory
